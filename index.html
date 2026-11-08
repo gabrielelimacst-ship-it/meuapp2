@@ -5,18 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Meu Ritmo - Rotina & Bem-estar</title>
     
-    <!-- Tailwind CSS & Font Awesome & Chart.js -->
+    <!-- Tailwind CSS, Font Awesome, Chart.js, Confetti & SheetJS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
     
-    <!-- Configuração de Cores TDAH-Friendly (Cozy) -->
+    <!-- Configuração de Cores Originais TDAH-Friendly -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        poppins: ['Poppins', 'sans-serif'],
+                        quicksand: ['Quicksand', 'sans-serif']
+                    },
                     colors: {
                         cozy: {
                             bg: '#f9f6f0',
@@ -58,16 +64,26 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .tap-effect { transition: transform 0.15s ease, opacity 0.2s ease, background-color 0.2s ease; cursor: pointer; }
-        .tap-effect:active { transform: scale(0.92); }
+        .tap-effect { transition: transform 0.15s ease, opacity 0.2s ease; cursor: pointer; }
+        .tap-effect:active { transform: scale(0.92); opacity: 0.8; }
         
-        @keyframes slideUpFade {
-            0% { opacity: 0; transform: translateY(15px); }
-            100% { opacity: 1; transform: translateY(0); }
+        /* CORREÇÃO DO BUG DAS ABAS: Fluxo natural + Animação suave */
+        .tab-content { 
+            display: none; 
+            width: 100%;
         }
-        
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: slideUpFade 0.3s ease-out forwards; }
+
+        @keyframes slideInRight {
+            0% { opacity: 0; transform: translateX(20px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInLeft {
+            0% { opacity: 0; transform: translateX(-20px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .active-right { animation: slideInRight 0.25s ease-out forwards; }
+        .active-left { animation: slideInLeft 0.25s ease-out forwards; }
 
         .custom-checkbox {
             appearance: none; width: 22px; height: 22px; border: 2px solid #d2dcd1; border-radius: 50%;
@@ -98,28 +114,37 @@
 
     <div class="iphone-container">
         
-        <!-- Header Fixo -->
-        <header class="pt-12 pb-3 px-6 bg-cozy-bg/95 backdrop-blur-md sticky top-0 z-20 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold tracking-tight text-cozy-text" id="header-title">Tarefas</h1>
-                <p class="text-[10px] text-cozy-textLight font-bold mt-1 uppercase tracking-wider" id="header-date"></p>
+        <!-- Header Fixo com Imagem de Fundo Aconchegante e Estilo Clássico -->
+        <header id="main-header" class="relative pt-12 pb-4 px-6 sticky top-0 z-20 flex justify-between items-center border-b border-gray-100 shadow-sm bg-cover bg-center" style="background-image: url('3385838_3.jpg');">
+            <!-- Camada suave para legibilidade com textura cozy -->
+            <div class="absolute inset-0 bg-[#f9f6f0]/85 backdrop-blur-[2px] z-0"></div>
+            
+            <div class="relative z-10 flex-1 min-w-0 pr-3">
+                <p class="text-[11px] text-cozy-sage font-semibold mb-0.5 tracking-wide flex items-center gap-1.5" id="header-subtitle">
+                    <span id="greeting-text">Bom dia</span> • <span>Respire fundo, no seu ritmo ✨</span>
+                </p>
+                <h1 class="text-2xl font-poppins font-bold tracking-tight text-cozy-text truncate" id="header-title">Tarefas</h1>
+                <p class="text-[10px] text-cozy-textLight font-bold mt-0.5 uppercase tracking-wider" id="header-date"></p>
             </div>
-            <img src="https://placehold.co/100x100/d2dcd1/8b9c8a?text=Foto" alt="Perfil" class="w-10 h-10 rounded-full border-2 border-white shadow-sm tap-effect object-cover" onclick="openModal('perfil-modal')">
+
+            <!-- Avatar minimalista ou foto enviada pelo usuário -->
+            <div onclick="openModal('perfil-modal')" class="relative z-10 w-11 h-11 rounded-full border-2 border-white shadow-sm tap-effect bg-cozy-sage text-white font-poppins font-bold flex items-center justify-center text-sm cursor-pointer flex-shrink-0 overflow-hidden" id="header-avatar-container">
+                <span id="header-avatar-initial">U</span>
+                <img id="header-avatar-img" src="" alt="Perfil" class="w-full h-full object-cover hidden">
+            </div>
         </header>
 
         <!-- Área Principal -->
-        <main class="flex-1 overflow-y-auto hide-scrollbar px-6 pb-28">
+        <main class="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar px-6 pb-28 pt-4 bg-cozy-bg relative">
             
             <!-- ABA 1: TAREFAS -->
-            <div id="tab-tarefas" class="tab-content active h-full flex flex-col">
+            <div id="tab-tarefas" class="tab-content flex-col active-right" style="display: flex;">
                 
-                <!-- O que precisamos fazer hoje? (2º Quarto da tela) -->
                 <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-6 shrink-0">
-                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-3">O que precisamos fazer hoje?</h3>
+                    <h3 class="text-xs font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-3">O que precisamos fazer hoje?</h3>
                     <input type="text" id="task-input" placeholder="Nova tarefa..." class="w-full bg-gray-50 rounded-xl p-3 text-sm outline-none border border-gray-100 text-cozy-text mb-4 font-medium focus:border-cozy-sageLight">
                     
                     <div class="space-y-4">
-                        <!-- Categorias -->
                         <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1" id="category-selector">
                             <button class="cat-btn active whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wide bg-cozy-sage text-white tap-effect" data-val="Rotina">🏠 Rotina</button>
                             <button class="cat-btn whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-500 tap-effect" data-val="Pessoal">💆‍♀️ Pessoal</button>
@@ -128,7 +153,6 @@
                             <button class="cat-btn whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-500 tap-effect" data-val="Saúde">💊 Saúde</button>
                         </div>
                         
-                        <!-- Prioridade e Botão -->
                         <div class="flex justify-between items-center">
                             <div class="flex gap-2 bg-gray-50 p-1 rounded-full">
                                 <button class="prio-btn whitespace-nowrap px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-cozy-sageLight text-cozy-text tap-effect transition-colors" data-val="Baixa">Baixa</button>
@@ -140,24 +164,24 @@
                     </div>
                 </div>
 
-                <!-- Lista de Tarefas (3º e 4º Quartos) -->
-                <div class="flex-1">
-                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-3"><i class="fa-solid fa-list-check mr-1 text-cozy-sage"></i> Minhas Tarefas</h3>
-                    <div class="space-y-3 pb-4" id="task-list">
-                        <!-- Tarefas injetadas via JS -->
-                    </div>
+                <div class="mb-4">
+                    <h3 class="text-xs font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-3"><i class="fa-solid fa-list-check mr-1 text-cozy-sage"></i> A Fazer</h3>
+                    <div class="space-y-3" id="task-list-pending"></div>
+                </div>
+
+                <div class="mt-6 mb-4">
+                    <h3 class="text-xs font-poppins font-bold text-gray-400 uppercase tracking-wider mb-3"><i class="fa-solid fa-check-double mr-1"></i> Realizadas Hoje</h3>
+                    <div class="space-y-3 opacity-60" id="task-list-completed"></div>
                 </div>
             </div>
 
             <!-- ABA 2: SAÚDE -->
             <div id="tab-saude" class="tab-content">
-                <h2 class="text-lg font-bold text-cozy-text mb-4">Hábitos e Saúde</h2>
                 
-                <!-- Água e Refeições -->
                 <div class="flex gap-4 mb-6">
                     <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex-1 flex flex-col justify-between">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-[10px] font-bold text-cozy-textLight uppercase tracking-wider"><i class="fa-solid fa-droplet text-blue-300 mr-1"></i> Água</h3>
+                            <h3 class="text-[10px] font-poppins font-bold text-cozy-textLight uppercase tracking-wider"><i class="fa-solid fa-droplet text-blue-300 mr-1"></i> Água</h3>
                             <span class="text-sm font-bold text-cozy-text" id="water-count">0/8</span>
                         </div>
                         <div class="flex justify-between items-center">
@@ -168,42 +192,60 @@
                     </div>
                     
                     <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex-1">
-                        <h3 class="text-[10px] font-bold text-cozy-textLight uppercase tracking-wider mb-3"><i class="fa-solid fa-utensils text-cozy-accent mr-1"></i> Refeições</h3>
+                        <h3 class="text-[10px] font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-3"><i class="fa-solid fa-utensils text-cozy-accent mr-1"></i> Refeições</h3>
                         <div class="flex flex-col gap-2">
                             <label class="flex items-center gap-2 tap-effect">
-                                <input type="checkbox" class="custom-checkbox w-4 h-4" onchange="toggleMeal('cafe', this.checked)" id="cb-meal-cafe">
-                                <span class="text-xs font-semibold text-cozy-text">Café</span>
+                                <input type="checkbox" class="custom-checkbox w-4 h-4" onchange="toggleMeal('cafe', this.checked, event)" id="cb-meal-cafe">
+                                <span class="text-xs font-semibold text-cozy-text">☕ Café</span>
                             </label>
                             <label class="flex items-center gap-2 tap-effect">
-                                <input type="checkbox" class="custom-checkbox w-4 h-4" onchange="toggleMeal('almoco', this.checked)" id="cb-meal-almoco">
-                                <span class="text-xs font-semibold text-cozy-text">Almoço</span>
+                                <input type="checkbox" class="custom-checkbox w-4 h-4" onchange="toggleMeal('almoco', this.checked, event)" id="cb-meal-almoco">
+                                <span class="text-xs font-semibold text-cozy-text">🥗 Almoço</span>
                             </label>
                             <label class="flex items-center gap-2 tap-effect">
-                                <input type="checkbox" class="custom-checkbox w-4 h-4" onchange="toggleMeal('janta', this.checked)" id="cb-meal-janta">
-                                <span class="text-xs font-semibold text-cozy-text">Janta</span>
+                                <input type="checkbox" class="custom-checkbox w-4 h-4" onchange="toggleMeal('janta', this.checked, event)" id="cb-meal-janta">
+                                <span class="text-xs font-semibold text-cozy-text">🍲 Janta</span>
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Lista de Medicamentos -->
                 <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-[10px] font-bold text-cozy-textLight uppercase tracking-wider"><i class="fa-solid fa-pills mr-1 text-cozy-danger/70"></i> Medicações do Dia</h3>
-                        <button onclick="openModal('perfil-modal')" class="text-[9px] font-bold text-cozy-sage uppercase tracking-wider tap-effect bg-cozy-sageLight/30 px-2 py-1 rounded">Gerenciar</button>
+                        <h3 class="text-[10px] font-poppins font-bold text-cozy-textLight uppercase tracking-wider"><i class="fa-solid fa-pills mr-1 text-cozy-danger/70"></i> Medicações do Dia</h3>
+                        <button onclick="openModal('meds-modal')" class="text-[9px] font-bold text-cozy-sage uppercase tracking-wider tap-effect bg-cozy-sageLight/30 px-2 py-1 rounded">Gerenciar</button>
                     </div>
-                    <div id="saude-meds-list" class="space-y-0 divide-y divide-gray-50">
-                        <!-- Remédios renderizados aqui (igualdade visual) -->
-                    </div>
+                    <div id="saude-meds-list" class="space-y-0 divide-y divide-gray-50"></div>
                 </div>
             </div>
 
-            <!-- ABA 3: DIÁRIO -->
+            <!-- ABA 3: CALENDÁRIO -->
+            <div id="tab-calendario" class="tab-content">
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-5">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-sm font-poppins font-bold text-cozy-text" id="calendar-month-year">Novembro 2026</h3>
+                        <div class="flex gap-2">
+                            <button class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 tap-effect"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                            <button class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 tap-effect"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-2 text-center mb-2">
+                        <div class="text-[10px] font-bold text-cozy-textLight uppercase">Dom</div>
+                        <div class="text-[10px] font-bold text-cozy-textLight uppercase">Seg</div>
+                        <div class="text-[10px] font-bold text-cozy-textLight uppercase">Ter</div>
+                        <div class="text-[10px] font-bold text-cozy-textLight uppercase">Qua</div>
+                        <div class="text-[10px] font-bold text-cozy-textLight uppercase">Qui</div>
+                        <div class="text-[10px] font-bold text-cozy-textLight uppercase">Sex</div>
+                        <div class="text-[10px] font-bold text-cozy-textLight uppercase">Sáb</div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-2 text-center" id="calendar-grid"></div>
+                </div>
+            </div>
+
+            <!-- ABA 4: DIÁRIO -->
             <div id="tab-diario" class="tab-content">
                 <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-5">
-                    
-                    <!-- Humor -->
-                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-4">Como você está agora?</h3>
+                    <h3 class="text-xs font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-4">Como você está agora?</h3>
                     <div class="flex justify-between mb-8 px-1">
                         <button onclick="setMood(1)" id="mood-1" class="mood-btn text-3xl opacity-30 tap-effect grayscale transition-all">😫</button>
                         <button onclick="setMood(2)" id="mood-2" class="mood-btn text-3xl opacity-30 tap-effect grayscale transition-all">☹️</button>
@@ -212,86 +254,211 @@
                         <button onclick="setMood(5)" id="mood-5" class="mood-btn text-3xl opacity-30 tap-effect grayscale transition-all">🥰</button>
                     </div>
 
-                    <!-- Sensações (Fixo) -->
-                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-3">Sintomas & Sensações</h3>
-                    <div class="flex flex-wrap gap-2 mb-6" id="sensations-container">
-                        <!-- Injetados via JS -->
-                    </div>
+                    <h3 class="text-xs font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-3">Sintomas & Sensações</h3>
+                    <div class="flex flex-wrap gap-2 mb-6" id="sensations-container"></div>
 
-                    <!-- Eventos Personalizados -->
-                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-3">Eventos do Dia</h3>
+                    <h3 class="text-xs font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-3">Eventos do Dia</h3>
                     <div class="flex gap-2 mb-3">
                         <input type="text" id="custom-event-input" placeholder="Ex: Notícia ruim, Presente..." class="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-xs outline-none border border-gray-100 text-cozy-text focus:border-cozy-sageLight">
                         <button onclick="addCustomEvent()" class="bg-cozy-text text-white px-3 rounded-xl text-xs font-bold tap-effect">Add</button>
                     </div>
-                    <div class="flex flex-wrap gap-2 mb-6 empty:hidden" id="custom-events-container">
-                        <!-- Tags de eventos personalizados injetados via JS -->
-                    </div>
+                    <div class="flex flex-wrap gap-2 mb-6 empty:hidden" id="custom-events-container"></div>
 
-                    <!-- Notas -->
-                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-3">Notas</h3>
+                    <h3 class="text-xs font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-3">Notas</h3>
                     <textarea id="diary-notes" class="w-full bg-gray-50 rounded-xl p-3 text-xs outline-none border border-gray-100 text-cozy-text focus:border-cozy-sageLight resize-none h-20 mb-4" placeholder="Algum outro detalhe ou pensamento?"></textarea>
 
-                    <button onclick="saveDiary()" class="w-full bg-cozy-sage text-white py-3 rounded-2xl text-sm font-bold uppercase tracking-wide tap-effect shadow-sm">
-                        Registrar Diário
-                    </button>
+                    <button onclick="saveDiary()" class="w-full bg-cozy-sage text-white py-3 rounded-2xl text-sm font-bold uppercase tracking-wide tap-effect shadow-sm">Registrar Diário</button>
                     <p id="save-msg" class="text-center text-xs text-cozy-sage mt-3 font-bold opacity-0 transition-opacity">Salvo com sucesso!</p>
                 </div>
             </div>
-
-            <!-- ABA 4: STATS -->
+            
+            <!-- ABA 5: STATS -->
             <div id="tab-stats" class="tab-content">
                 <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-5">
-                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-2">Humor x Hábitos (Últimos 7 dias)</h3>
-                    <p class="text-[10px] text-gray-400 mb-4 leading-tight">A linha mostra seu Humor. As barras mostram sua aderência aos hábitos (Remédios, Água, Comida).</p>
+                    <h3 class="text-xs font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-3">Análise Isolada de Hábitos</h3>
+                    
+                    <!-- Dropdown de Filtro -->
+                    <select id="chart-filter" onchange="renderChart()" class="w-full bg-gray-50 rounded-xl p-3 text-xs outline-none border border-gray-100 text-cozy-text mb-4 font-semibold focus:border-cozy-sageLight cursor-pointer">
+                        <option value="geral">Todos os Hábitos (Média) x Humor</option>
+                        <option value="agua">Apenas Água x Humor</option>
+                        <option value="refeicoes">Apenas Refeições x Humor</option>
+                        <option value="remedios">Apenas Medicamentos x Humor</option>
+                    </select>
+
+                    <p class="text-[10px] text-gray-400 mb-4 leading-tight">A linha mostra seu Humor. As barras mostram o hábito selecionado. Tudo em escala de 0 a 5.</p>
                     <div class="relative h-56 w-full"><canvas id="statsChart"></canvas></div>
+                </div>
+
+                <!-- Mapa de Acontecimentos -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-5">
+                    <h3 class="text-xs font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-4"><i class="fa-solid fa-map-location-dot mr-1"></i> Mapa de Acontecimentos</h3>
+                    
+                    <div class="relative flex justify-between items-center px-1 mb-4 z-0">
+                        <!-- Linha conectora -->
+                        <div class="absolute top-1/2 left-3 right-3 h-0.5 bg-gray-200 -z-10 transform -translate-y-1/2 rounded"></div>
+                        <!-- Nós da Timeline -->
+                        <button onclick="showTimelineInfo(0)" class="timeline-node w-6 h-6 rounded-full border-2 text-[9px] font-bold tap-effect transition-colors border-gray-300 bg-white text-gray-400">S</button>
+                        <button onclick="showTimelineInfo(1)" class="timeline-node w-6 h-6 rounded-full border-2 text-[9px] font-bold tap-effect transition-colors border-gray-300 bg-white text-gray-400">T</button>
+                        <button onclick="showTimelineInfo(2)" class="timeline-node w-6 h-6 rounded-full border-2 text-[9px] font-bold tap-effect transition-colors border-gray-300 bg-white text-gray-400">Q</button>
+                        <button onclick="showTimelineInfo(3)" class="timeline-node w-6 h-6 rounded-full border-2 text-[9px] font-bold tap-effect transition-colors border-gray-300 bg-white text-gray-400">Q</button>
+                        <button onclick="showTimelineInfo(4)" class="timeline-node w-6 h-6 rounded-full border-2 text-[9px] font-bold tap-effect transition-colors border-gray-300 bg-white text-gray-400">S</button>
+                        <button onclick="showTimelineInfo(5)" class="timeline-node w-6 h-6 rounded-full border-2 text-[9px] font-bold tap-effect transition-colors border-gray-300 bg-white text-gray-400">S</button>
+                        <button onclick="showTimelineInfo(6)" class="timeline-node w-6 h-6 rounded-full border-2 text-[9px] font-bold tap-effect transition-colors border-cozy-sage bg-cozy-sage text-white">H</button>
+                    </div>
+
+                    <div id="timeline-info-box" class="bg-gray-50/80 rounded-2xl p-4 text-xs text-cozy-text border border-gray-100 min-h-[4.5rem] flex flex-col justify-center">
+                        Selecione um dia para ver o resumo.
+                    </div>
                 </div>
             </div>
         </main>
 
         <!-- Navegação Inferior -->
-        <nav class="absolute bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-gray-100 pb-safe pt-2 px-6 pb-6 z-30">
-            <div class="flex justify-between items-center">
-                <button onclick="switchTab('tarefas')" class="nav-btn active flex flex-col items-center gap-1.5 text-cozy-sage w-16 tap-effect" data-target="tarefas">
-                    <i class="fa-solid fa-list-check text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wide">Tarefas</span>
-                </button>
-                <button onclick="switchTab('saude')" class="nav-btn flex flex-col items-center gap-1.5 text-gray-400 w-16 tap-effect" data-target="saude">
-                    <i class="fa-solid fa-heart-pulse text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wide">Saúde</span>
-                </button>
-                <button onclick="switchTab('diario')" class="nav-btn flex flex-col items-center gap-1.5 text-gray-400 w-16 tap-effect" data-target="diario">
-                    <i class="fa-solid fa-book-open text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wide">Diário</span>
-                </button>
-                <button onclick="switchTab('stats')" class="nav-btn flex flex-col items-center gap-1.5 text-gray-400 w-16 tap-effect" data-target="stats">
-                    <i class="fa-solid fa-chart-pie text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wide">Stats</span>
-                </button>
-            </div>
+        <nav class="absolute bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-gray-100 pt-2 px-4 pb-6 z-30 flex justify-between items-center rounded-b-[40px]">
+            <button onclick="switchTab('tarefas')" class="nav-btn active flex flex-col items-center gap-1 text-cozy-sage w-14 tap-effect" data-target="tarefas">
+                <i class="fa-solid fa-list-check text-[18px]"></i><span class="text-[8px] font-bold uppercase">Tarefas</span>
+            </button>
+            <button onclick="switchTab('saude')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 w-14 tap-effect" data-target="saude">
+                <i class="fa-solid fa-heart-pulse text-[18px]"></i><span class="text-[8px] font-bold uppercase">Saúde</span>
+            </button>
+            <button onclick="switchTab('calendario')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 w-14 tap-effect" data-target="calendario">
+                <i class="fa-regular fa-calendar text-[18px]"></i><span class="text-[8px] font-bold uppercase">Agenda</span>
+            </button>
+            <button onclick="switchTab('diario')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 w-14 tap-effect" data-target="diario">
+                <i class="fa-solid fa-book-open text-[18px]"></i><span class="text-[8px] font-bold uppercase">Diário</span>
+            </button>
+            <button onclick="switchTab('stats')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 w-14 tap-effect" data-target="stats">
+                <i class="fa-solid fa-chart-pie text-[18px]"></i><span class="text-[8px] font-bold uppercase">Stats</span>
+            </button>
         </nav>
 
-        <!-- MODAL: MEU PERFIL -->
+        <!-- MODAL: MEU PERFIL E NUVEM (CORRIGIDO) -->
         <div id="perfil-modal" class="modal-overlay" onclick="closeModal(event, 'perfil-modal')">
             <div class="modal-content hide-scrollbar" onclick="event.stopPropagation()">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-cozy-text">Meu Perfil</h2>
-                    <button onclick="forceCloseModal('perfil-modal')" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 tap-effect flex justify-center items-center"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-poppins font-bold text-cozy-text flex items-center gap-2">
+                        <i class="fa-solid fa-user text-cozy-sage text-lg"></i> Meu Perfil
+                    </h2>
+                    <button type="button" onclick="forceCloseModal('perfil-modal')" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 tap-effect flex justify-center items-center"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                
-                <div class="flex items-center gap-4 mb-8">
-                    <img src="https://placehold.co/150x150/d2dcd1/8b9c8a?text=Foto" class="w-16 h-16 rounded-full object-cover">
-                    <div>
-                        <h3 class="text-sm font-bold text-cozy-text">Visitante (Local)</h3>
-                        <p class="text-xs text-gray-400">Dados salvos no seu aparelho</p>
+
+                <!-- Resumo dos Dados Atuais do Usuário com Opção de Upload -->
+                <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="relative group">
+                            <div class="w-14 h-14 rounded-full bg-cozy-sage text-white flex items-center justify-center font-bold text-lg shadow-sm overflow-hidden border-2 border-cozy-sageLight/50" id="profile-badge-container">
+                                <span id="profile-badge-initial">U</span>
+                                <img id="profile-badge-img" src="" alt="Foto" class="w-full h-full object-cover hidden">
+                            </div>
+                            <label for="profile-photo-input" class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white text-cozy-sage border border-gray-200 shadow flex items-center justify-center text-[10px] cursor-pointer tap-effect hover:bg-cozy-bg">
+                                <i class="fa-solid fa-camera"></i>
+                            </label>
+                            <input type="file" id="profile-photo-input" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-cozy-text truncate" id="status-user-name">Usuário</p>
+                            <p class="text-xs text-gray-400 truncate" id="status-user-email">Sem e-mail cadastrado</p>
+                            <button type="button" id="btn-remove-photo" onclick="removeProfilePhoto()" class="text-[10px] text-cozy-danger font-semibold hover:underline mt-0.5 hidden">Remover foto</button>
+                        </div>
+                        <span id="cloud-sync-badge" class="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-gray-100 text-gray-500">
+                            Pendente
+                        </span>
                     </div>
                 </div>
 
-                <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-4"><i class="fa-solid fa-pills mr-1"></i> Gerenciar Medicamentos</h3>
+                <!-- Formulário com Todas as Informações do Perfil -->
+                <form id="profile-form" onsubmit="handleCloudAuth(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-[10px] font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-1">Nome Completo</label>
+                        <input type="text" id="profile-name" required placeholder="Digite seu nome completo" class="w-full bg-white rounded-xl px-4 py-3 text-xs outline-none border border-gray-200 text-cozy-text font-medium focus:border-cozy-sage transition-colors">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-1">Data de Nascimento</label>
+                            <input type="date" id="profile-birthdate" class="w-full bg-white rounded-xl px-4 py-3 text-xs outline-none border border-gray-200 text-cozy-text font-medium focus:border-cozy-sage transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-1">E-mail</label>
+                            <input type="email" id="profile-email" required placeholder="seuemail@exemplo.com" class="w-full bg-white rounded-xl px-4 py-3 text-xs outline-none border border-gray-200 text-cozy-text font-medium focus:border-cozy-sage transition-colors">
+                        </div>
+                    </div>
+
+                    <!-- Configuração Segura de Senha -->
+                    <div class="bg-gray-50/70 p-3.5 rounded-2xl border border-gray-100 space-y-2.5">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-[10px] font-poppins font-bold text-cozy-textLight uppercase tracking-wider">Segurança & Senha</label>
+                            <span class="text-[9px] text-gray-400 font-medium" id="pwd-status-hint">Defina ou altere sua senha</span>
+                        </div>
+                        
+                        <div id="current-pwd-wrapper" class="hidden">
+                            <label class="block text-[9px] text-gray-500 font-medium mb-1">Senha Atual (obrigatória para alterar)</label>
+                            <div class="relative">
+                                <input type="password" id="profile-current-password" placeholder="Digite sua senha atual" class="w-full bg-white rounded-xl px-3 py-2 text-xs outline-none border border-gray-200 text-cozy-text font-medium focus:border-cozy-sage transition-colors pr-8">
+                                <button type="button" onclick="togglePasswordVisibility('profile-current-password', 'current-pwd-icon')" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cozy-text text-xs p-1">
+                                    <i id="current-pwd-icon" class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[9px] text-gray-500 font-medium mb-1" id="new-pwd-label">Senha</label>
+                                <div class="relative">
+                                    <input type="password" id="profile-new-password" placeholder="Nova senha" class="w-full bg-white rounded-xl px-3 py-2 text-xs outline-none border border-gray-200 text-cozy-text font-medium focus:border-cozy-sage transition-colors pr-8">
+                                    <button type="button" onclick="togglePasswordVisibility('profile-new-password', 'new-pwd-icon')" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cozy-text text-xs p-1">
+                                        <i id="new-pwd-icon" class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[9px] text-gray-500 font-medium mb-1">Confirmar Senha</label>
+                                <div class="relative">
+                                    <input type="password" id="profile-confirm-password" placeholder="Repita a senha" class="w-full bg-white rounded-xl px-3 py-2 text-xs outline-none border border-gray-200 text-cozy-text font-medium focus:border-cozy-sage transition-colors pr-8">
+                                    <button type="button" onclick="togglePasswordVisibility('profile-confirm-password', 'confirm-pwd-icon')" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-cozy-text text-xs p-1">
+                                        <i id="confirm-pwd-icon" class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <p id="pwd-error-msg" class="text-[10px] text-cozy-danger font-medium hidden"></p>
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" class="flex-1 bg-cozy-sage text-white py-3 rounded-2xl text-xs font-bold uppercase tracking-wider tap-effect shadow-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Salvar Perfil
+                        </button>
+                        <button type="button" onclick="logoutCloudUser()" class="bg-gray-100 text-gray-600 px-4 py-3 rounded-2xl text-xs font-bold tap-effect hover:bg-gray-200">
+                            Limpar
+                        </button>
+                    </div>
+                    <p id="profile-save-msg" class="text-center text-xs text-cozy-sage font-bold opacity-0 transition-opacity">Perfil atualizado com sucesso! ✨</p>
+                </form>
+
+                <!-- Área de Backup/Exportação -->
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <button type="button" onclick="exportDataToExcel(event)" class="w-full bg-white text-cozy-sage border border-cozy-sage/40 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider tap-effect shadow-sm flex items-center justify-center gap-2 hover:bg-cozy-sage/10 transition-colors">
+                        <i class="fa-solid fa-file-excel text-base"></i> Baixar Dados (Excel)
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MODAL: GERENCIAR MEDICAMENTOS -->
+        <div id="meds-modal" class="modal-overlay" onclick="closeModal(event, 'meds-modal')">
+            <div class="modal-content hide-scrollbar" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-poppins font-bold text-cozy-text">Medicamentos</h2>
+                    <button onclick="forceCloseModal('meds-modal')" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 tap-effect flex justify-center items-center"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                
+                <h3 class="text-xs font-poppins font-bold text-cozy-textLight uppercase tracking-wider mb-4"><i class="fa-solid fa-pills mr-1"></i> Adicionar Medicação</h3>
                 <form class="flex gap-2 mb-4" onsubmit="addMed(event)">
                     <input type="text" id="new-med-input" placeholder="Nome da medicação..." required class="flex-1 bg-white rounded-xl px-4 py-3 text-sm outline-none border border-gray-200 text-cozy-text font-medium">
                     <button type="submit" class="bg-cozy-sage text-white px-5 rounded-xl text-sm font-bold tap-effect">Add</button>
                 </form>
                 
-                <div class="space-y-2 mb-8" id="perfil-meds-list">
-                    <!-- Lista de Medicamentos (Gerenciamento) -->
-                </div>
+                <div class="space-y-2 mb-8" id="meds-manage-list"></div>
             </div>
         </div>
 
@@ -299,13 +466,12 @@
 
     <script>
         // ==========================================
-        // ÁUDIO (Feedback Tátil/Sonoro - TDAH)
+        // ÁUDIO (Apenas Sucesso - Fofo e Suave)
         // ==========================================
         let audioCtx = null;
-        let audioInited = false;
-
+        
         function initAudioOnFirstClick() {
-            if (audioInited) return;
+            if (audioCtx) return;
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext();
             const osc = audioCtx.createOscillator();
@@ -313,35 +479,42 @@
             gain.gain.value = 0;
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + 0.01);
-            audioInited = true;
         }
 
-        function playSound(type) {
+        function playSuccessSound() {
             if (!audioCtx || audioCtx.state === 'suspended') {
                 if(audioCtx) audioCtx.resume(); else return;
             }
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
             const now = audioCtx.currentTime;
             
-            if (type === 'pop') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
-                gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'ding') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(700, now);
-                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.2, now + 0.03);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                osc.start(now); osc.stop(now + 0.3);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.1, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(now); osc.stop(now + 0.3);
+        }
+
+        // ==========================================
+        // CONFETES (Minimalista)
+        // ==========================================
+        function fireConfetti(event) {
+            let x = 0.5, y = 0.5;
+            if (event && event.clientX) {
+                x = event.clientX / window.innerWidth;
+                y = event.clientY / window.innerHeight;
             }
+            confetti({
+                particleCount: 30, spread: 50, origin: { x, y },
+                colors: ['#8b9c8a', '#d9c5b2', '#e6c88a'], 
+                disableForReducedMotion: true, scalar: 0.7, ticks: 100
+            });
         }
 
         // ==========================================
@@ -350,29 +523,48 @@
         let todayStr = new Date().toLocaleDateString('pt-BR');
         
         let state = {
-            tasks: [],
-            meds: [], 
-            dailyMeds: {}, 
+            profile: {
+                name: '',
+                birthdate: '',
+                email: '',
+                password: '',
+                avatarUrl: ''
+            },
+            tasks: [], meds: [], dailyMeds: {}, 
             diary: { water: 0, meals: {cafe: false, almoco: false, janta: false}, mood: 0, sensations: [], customEvents: [], notes: '' },
             lastDate: todayStr
         };
 
+        // Simulação do Repositório de Nuvem por E-mail (Compatível com múltiplos usuários e GitHub Pages)
+        function getCloudUserStorageKey(email) {
+            return 'meuRitmo_cloud_' + btoa(email.toLowerCase().trim());
+        }
+
         function loadData() {
-            const saved = localStorage.getItem('meuRitmo_v2');
+            const currentEmail = localStorage.getItem('meuRitmo_active_user');
+            let saved = null;
+            
+            if (currentEmail) {
+                saved = localStorage.getItem(getCloudUserStorageKey(currentEmail));
+            }
+            if (!saved) {
+                saved = localStorage.getItem('meuRitmo_v4');
+            }
+
             if (saved) {
-                const parsed = JSON.parse(saved);
-                state.tasks = parsed.tasks || [];
-                state.meds = parsed.meds || [];
-                
-                if (parsed.lastDate === todayStr) {
-                    state.dailyMeds = parsed.dailyMeds || {};
-                    state.diary = parsed.diary || { water: 0, meals: {}, mood: 0, sensations: [], customEvents: [], notes: '' };
-                    if(!state.diary.meals) state.diary.meals = {cafe: false, almoco: false, janta: false};
-                    if(!state.diary.customEvents) state.diary.customEvents = [];
-                } else {
+                try {
+                    const parsed = JSON.parse(saved);
+                    state = { ...state, ...parsed };
+                } catch(e) {}
+
+                if (!state.profile) {
+                    state.profile = { name: '', birthdate: '', email: '', password: '', avatarUrl: '' };
+                }
+
+                if (state.lastDate !== todayStr) {
                     state.dailyMeds = {};
                     state.diary = { water: 0, meals: {cafe: false, almoco: false, janta: false}, mood: 0, sensations: [], customEvents: [], notes: '' };
-                    state.tasks.forEach(t => { if(t.cat === 'Rotina') t.completed = false; }); // Exemplo: desmarcar só rotina ou tudo
+                    state.tasks.forEach(t => { if(t.cat === 'Rotina') t.completed = false; });
                     state.lastDate = todayStr;
                 }
             } else {
@@ -380,19 +572,305 @@
             }
         }
 
-        function saveData() { localStorage.setItem('meuRitmo_v2', JSON.stringify(state)); }
+        function saveData() { 
+            const serialized = JSON.stringify(state);
+            localStorage.setItem('meuRitmo_v4', serialized);
+
+            if (state.profile?.email) {
+                localStorage.setItem(getCloudUserStorageKey(state.profile.email), serialized);
+                localStorage.setItem('meuRitmo_active_user', state.profile.email);
+            }
+        }
 
         // ==========================================
-        // UI GERAL (Abas e Modais)
+        // GERENCIAMENTO DE PERFIL, FOTO E SEGURANÇA
         // ==========================================
-        const titles = { 'tarefas': 'Tarefas', 'saude': 'Saúde', 'diario': 'Meu Diário', 'stats': 'Estatísticas' };
+        function updateAvatarUI() {
+            const name = (state.profile && state.profile.name) ? state.profile.name.trim() : '';
+            const initial = name ? name.charAt(0).toUpperCase() : 'U';
+            const avatarUrl = state.profile?.avatarUrl;
+
+            const headerInitial = document.getElementById('header-avatar-initial');
+            const headerImg = document.getElementById('header-avatar-img');
+            const badgeInitial = document.getElementById('profile-badge-initial');
+            const badgeImg = document.getElementById('profile-badge-img');
+            const removeBtn = document.getElementById('btn-remove-photo');
+
+            if (avatarUrl) {
+                if (headerInitial) headerInitial.classList.add('hidden');
+                if (headerImg) {
+                    headerImg.src = avatarUrl;
+                    headerImg.classList.remove('hidden');
+                }
+                if (badgeInitial) badgeInitial.classList.add('hidden');
+                if (badgeImg) {
+                    badgeImg.src = avatarUrl;
+                    badgeImg.classList.remove('hidden');
+                }
+                if (removeBtn) removeBtn.classList.remove('hidden');
+            } else {
+                if (headerImg) headerImg.classList.add('hidden');
+                if (headerInitial) {
+                    headerInitial.textContent = initial;
+                    headerInitial.classList.remove('hidden');
+                }
+                if (badgeImg) badgeImg.classList.add('hidden');
+                if (badgeInitial) {
+                    badgeInitial.textContent = initial;
+                    badgeInitial.classList.remove('hidden');
+                }
+                if (removeBtn) removeBtn.classList.add('hidden');
+            }
+
+            const nameEl = document.getElementById('status-user-name');
+            const emailEl = document.getElementById('status-user-email');
+            const syncBadge = document.getElementById('cloud-sync-badge');
+
+            if (state.profile && (state.profile.name || state.profile.email)) {
+                if (nameEl) nameEl.textContent = state.profile.name || 'Usuário';
+                if (emailEl) emailEl.textContent = state.profile.email || 'Sem e-mail cadastrado';
+                if (syncBadge) {
+                    syncBadge.textContent = 'Salvo';
+                    syncBadge.className = 'text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-cozy-sageLight/50 text-cozy-sage';
+                }
+            } else {
+                if (nameEl) nameEl.textContent = 'Usuário';
+                if (emailEl) emailEl.textContent = 'Sem e-mail cadastrado';
+                if (syncBadge) {
+                    syncBadge.textContent = 'Pendente';
+                    syncBadge.className = 'text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-gray-100 text-gray-500';
+                }
+            }
+        }
+
+        window.handlePhotoUpload = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Limite de 3MB
+            if (file.size > 3 * 1024 * 1024) {
+                const errorEl = document.getElementById('pwd-error-msg');
+                if (errorEl) {
+                    errorEl.textContent = 'A imagem deve ter menos de 3MB.';
+                    errorEl.classList.remove('hidden');
+                }
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    // Redimensiona para manter leve no localStorage
+                    const canvas = document.createElement('canvas');
+                    const MAX_SIZE = 240;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
+                        }
+                    } else {
+                        if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+                    if (!state.profile) state.profile = {};
+                    state.profile.avatarUrl = compressedBase64;
+                    saveData();
+                    updateAvatarUI();
+                    playSuccessSound();
+                    fireConfetti(e);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.removeProfilePhoto = () => {
+            if (!state.profile) return;
+            state.profile.avatarUrl = '';
+            const photoInput = document.getElementById('profile-photo-input');
+            if (photoInput) photoInput.value = '';
+            saveData();
+            updateAvatarUI();
+        };
+
+        window.togglePasswordVisibility = (inputId, iconId) => {
+            const pwdInput = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (!pwdInput) return;
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                if (icon) {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            } else {
+                pwdInput.type = 'password';
+                if (icon) {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            }
+        };
+
+        window.handleCloudAuth = (e) => {
+            e.preventDefault();
+
+            const errorEl = document.getElementById('pwd-error-msg');
+            if (errorEl) errorEl.classList.add('hidden');
+
+            const inputEmail = document.getElementById('profile-email').value.trim().toLowerCase();
+            const inputName = document.getElementById('profile-name').value.trim();
+            const inputBirth = document.getElementById('profile-birthdate').value;
+            const currentPwd = document.getElementById('profile-current-password')?.value || '';
+            const newPwd = document.getElementById('profile-new-password')?.value || '';
+            const confirmPwd = document.getElementById('profile-confirm-password')?.value || '';
+
+            const hasExistingPwd = Boolean(state.profile?.password);
+
+            // Validações de segurança para a senha
+            let finalPassword = state.profile?.password || '';
+
+            if (hasExistingPwd) {
+                // Se o usuário digitou algo nos campos de nova senha, exige senha atual
+                if (newPwd || confirmPwd) {
+                    if (currentPwd !== state.profile.password) {
+                        if (errorEl) {
+                            errorEl.textContent = 'A senha atual informada está incorreta.';
+                            errorEl.classList.remove('hidden');
+                        }
+                        return;
+                    }
+                    if (newPwd.length < 4) {
+                        if (errorEl) {
+                            errorEl.textContent = 'A nova senha deve ter pelo menos 4 caracteres.';
+                            errorEl.classList.remove('hidden');
+                        }
+                        return;
+                    }
+                    if (newPwd !== confirmPwd) {
+                        if (errorEl) {
+                            errorEl.textContent = 'A confirmação de senha não confere com a nova senha.';
+                            errorEl.classList.remove('hidden');
+                        }
+                        return;
+                    }
+                    finalPassword = newPwd;
+                }
+            } else {
+                // Primeiro cadastro de senha
+                if (newPwd || confirmPwd) {
+                    if (newPwd !== confirmPwd) {
+                        if (errorEl) {
+                            errorEl.textContent = 'A confirmação não confere com a senha.';
+                            errorEl.classList.remove('hidden');
+                        }
+                        return;
+                    }
+                    finalPassword = newPwd;
+                }
+            }
+
+            // Se for outro e-mail que já possui dados salvos na nuvem local, restaura os dados daquela conta
+            const cloudKey = getCloudUserStorageKey(inputEmail);
+            const existingCloudData = localStorage.getItem(cloudKey);
+            if (existingCloudData && state.profile?.email !== inputEmail) {
+                try {
+                    const parsed = JSON.parse(existingCloudData);
+                    state = { ...state, ...parsed };
+                } catch(err) {}
+            }
+
+            state.profile = {
+                ...state.profile,
+                name: inputName,
+                birthdate: inputBirth,
+                email: inputEmail,
+                password: finalPassword
+            };
+
+            saveData();
+            renderProfile();
+
+            playSuccessSound();
+            fireConfetti(e);
+
+            const msg = document.getElementById('profile-save-msg');
+            if (msg) {
+                msg.style.opacity = '1';
+                setTimeout(() => { msg.style.opacity = '0'; }, 2500);
+            }
+        };
+
+        window.logoutCloudUser = () => {
+            localStorage.removeItem('meuRitmo_active_user');
+            state.profile = { name: '', birthdate: '', email: '', password: '', avatarUrl: '' };
+            saveData();
+            renderProfile();
+        };
+
+        function renderProfile() {
+            if (!state.profile) {
+                state.profile = { name: '', birthdate: '', email: '', password: '', avatarUrl: '' };
+            }
+            const p = state.profile;
+            const nameEl = document.getElementById('profile-name');
+            const birthEl = document.getElementById('profile-birthdate');
+            const emailEl = document.getElementById('profile-email');
+            const currentPwdWrapper = document.getElementById('current-pwd-wrapper');
+            const currentPwdEl = document.getElementById('profile-current-password');
+            const newPwdEl = document.getElementById('profile-new-password');
+            const confirmPwdEl = document.getElementById('profile-confirm-password');
+            const hintEl = document.getElementById('pwd-status-hint');
+            const newPwdLabel = document.getElementById('new-pwd-label');
+
+            if (nameEl) nameEl.value = p.name || '';
+            if (birthEl) birthEl.value = p.birthdate || '';
+            if (emailEl) emailEl.value = p.email || '';
+
+            // Limpa campos de senha por segurança
+            if (currentPwdEl) currentPwdEl.value = '';
+            if (newPwdEl) newPwdEl.value = '';
+            if (confirmPwdEl) confirmPwdEl.value = '';
+
+            if (p.password) {
+                if (currentPwdWrapper) currentPwdWrapper.classList.remove('hidden');
+                if (hintEl) hintEl.textContent = 'Senha protegida';
+                if (newPwdLabel) newPwdLabel.textContent = 'Nova Senha';
+            } else {
+                if (currentPwdWrapper) currentPwdWrapper.classList.add('hidden');
+                if (hintEl) hintEl.textContent = 'Nenhuma senha definida';
+                if (newPwdLabel) newPwdLabel.textContent = 'Criar Senha';
+            }
+
+            updateAvatarUI();
+        }
+
+        // ==========================================
+        // NAVEGAÇÃO DE ABAS
+        // ==========================================
+        const titles = { 'tarefas': 'Tarefas', 'saude': 'Saúde', 'calendario': 'Calendário', 'diario': 'Meu Diário', 'stats': 'Estatísticas' };
+        const tabOrder = ['tarefas', 'saude', 'calendario', 'diario', 'stats'];
+        let currentTabIndex = 0;
         let chartRendered = false;
 
         window.switchTab = (tabId) => {
-            playSound('pop');
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            
+            const newIndex = tabOrder.indexOf(tabId);
+            const isGoingRight = newIndex > currentTabIndex;
+            currentTabIndex = newIndex;
+
+            // Atualiza botões
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 if (btn.dataset.target === tabId) {
                     btn.classList.add('text-cozy-sage'); btn.classList.remove('text-gray-400');
@@ -401,13 +879,27 @@
                 }
             });
 
+            // Reseta todas as guias usando style para evitar conflitos de Tailwind
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.style.display = 'none';
+                el.classList.remove('active-right', 'active-left');
+            });
+            
+            // Exibe a guia alvo
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            targetTab.style.display = (tabId === 'tarefas') ? 'flex' : 'block';
+            void targetTab.offsetWidth;
+
+            if (isGoingRight) targetTab.classList.add('active-right');
+            else targetTab.classList.add('active-left');
+
             document.getElementById('header-title').textContent = titles[tabId];
             if(tabId === 'stats' && !chartRendered) { renderChart(); chartRendered = true; }
         };
 
-        window.openModal = (id) => { document.getElementById(id).classList.add('active'); playSound('pop'); };
+        window.openModal = (id) => { document.getElementById(id).classList.add('active'); };
         window.closeModal = (e, id) => { if(e.target.id === id) document.getElementById(id).classList.remove('active'); };
-        window.forceCloseModal = (id) => { document.getElementById(id).classList.remove('active'); playSound('pop'); };
+        window.forceCloseModal = (id) => { document.getElementById(id).classList.remove('active'); };
 
         // ==========================================
         // TAREFAS
@@ -417,7 +909,6 @@
         
         document.querySelectorAll('.cat-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                playSound('pop');
                 document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('bg-cozy-sage', 'text-white'); b.classList.add('bg-gray-100', 'text-gray-500'); });
                 e.target.classList.add('bg-cozy-sage', 'text-white'); e.target.classList.remove('bg-gray-100', 'text-gray-500');
                 currentTaskCat = e.target.dataset.val;
@@ -426,15 +917,13 @@
 
         document.querySelectorAll('.prio-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                playSound('pop');
                 document.querySelectorAll('.prio-btn').forEach(b => { 
-                    b.classList.remove('active', 'bg-cozy-sageLight', 'bg-cozy-warning', 'bg-cozy-danger', 'text-white', 'text-cozy-text'); 
+                    b.classList.remove('active', 'bg-cozy-sageLight', 'bg-cozy-warning', 'text-white', 'text-cozy-text'); 
                     b.classList.add('bg-transparent', 'text-gray-400');
                 });
-                
                 let val = e.target.dataset.val;
                 e.target.classList.remove('bg-transparent', 'text-gray-400');
-                e.target.classList.add('active', val==='Baixa'?'bg-cozy-sageLight':val==='Média'?'bg-cozy-warning':'bg-cozy-danger', val==='Baixa'?'text-cozy-text':'text-white');
+                e.target.classList.add('active', val==='Baixa'?'bg-cozy-sageLight':'bg-cozy-warning', val==='Baixa'?'text-cozy-text':'text-white');
                 currentTaskPrio = val;
             });
         });
@@ -443,40 +932,34 @@
             const input = document.getElementById('task-input');
             const text = input.value.trim();
             if(!text) return;
-            playSound('pop');
             state.tasks.push({ id: Date.now().toString(), text, cat: currentTaskCat, prio: currentTaskPrio, completed: false });
             input.value = ''; saveData(); renderTasks();
         };
 
-        window.toggleTask = (id, isCompleted) => {
-            if (isCompleted) playSound('ding'); else playSound('pop');
+        window.toggleTask = (id, isCompleted, event) => {
+            if (isCompleted) { playSuccessSound(); fireConfetti(event); }
             const task = state.tasks.find(t => t.id === id);
             if (task) task.completed = isCompleted;
-            saveData(); renderTasks();
+            saveData(); setTimeout(() => renderTasks(), 250);
         };
 
-        window.delTask = (id) => { playSound('pop'); state.tasks = state.tasks.filter(t => t.id !== id); saveData(); renderTasks(); };
+        window.delTask = (id) => { state.tasks = state.tasks.filter(t => t.id !== id); saveData(); renderTasks(); };
 
         function renderTasks() {
-            const list = document.getElementById('task-list');
-            list.innerHTML = '';
-            if (state.tasks.length === 0) { list.innerHTML = '<p class="text-xs text-gray-400 py-4 text-center">Nenhuma tarefa. Aproveite para descansar!</p>'; return; }
-
-            const sorted = [...state.tasks].sort((a,b) => {
-                if(a.completed !== b.completed) return a.completed ? 1 : -1; // Incompletas em cima
-                // Sort Priority: Alta > Média > Baixa (if needed, simplified here)
-                return 0;
-            });
+            const listPending = document.getElementById('task-list-pending');
+            const listCompleted = document.getElementById('task-list-completed');
+            listPending.innerHTML = ''; listCompleted.innerHTML = '';
 
             const emojis = { 'Rotina': '🏠', 'Pessoal': '💆‍♀️', 'Trabalho': '💻', 'Lazer': '🎨', 'Saúde': '💊' };
             const prioColors = { 'Baixa': 'text-cozy-sage', 'Média': 'text-cozy-warning', 'Alta': 'text-cozy-danger' };
 
-            sorted.forEach(t => {
+            let hasPending = false, hasCompleted = false;
+
+            state.tasks.forEach(t => {
                 const el = document.createElement('div');
-                el.className = `bg-white rounded-2xl p-4 shadow-sm border border-gray-50 flex gap-3 items-center transition-all ${t.completed ? 'opacity-50' : ''}`;
-                
+                el.className = `bg-white rounded-2xl p-4 shadow-sm border border-gray-50 flex gap-3 items-center transition-all ${t.completed ? 'opacity-70' : ''}`;
                 el.innerHTML = `
-                    <input type="checkbox" class="custom-checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask('${t.id}', this.checked)">
+                    <input type="checkbox" class="custom-checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask('${t.id}', this.checked, event)">
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-semibold text-cozy-text truncate ${t.completed ? 'line-through text-gray-400' : ''}">${t.text}</p>
                         <div class="flex gap-2 mt-1.5 items-center">
@@ -486,24 +969,27 @@
                     </div>
                     <button onclick="delTask('${t.id}')" class="text-gray-300 hover:text-red-400 p-2 tap-effect"><i class="fa-solid fa-xmark"></i></button>
                 `;
-                list.appendChild(el);
+                
+                if(t.completed) { listCompleted.appendChild(el); hasCompleted = true; }
+                else { listPending.appendChild(el); hasPending = true; }
             });
+
+            if(!hasPending) listPending.innerHTML = '<p class="text-xs text-gray-400 py-2">Nenhuma tarefa. Aproveite para descansar!</p>';
+            if(!hasCompleted) listCompleted.innerHTML = '<p class="text-xs text-gray-400 py-2">Nada concluído ainda.</p>';
         }
 
         // ==========================================
-        // SAÚDE & PERFIL (Medicamentos, Agua, Comida)
+        // SAÚDE E PERFIL
         // ==========================================
         window.updateWater = (val) => {
-            playSound('pop');
             let w = state.diary.water + val;
             if(w < 0) w = 0; if(w > 8) w = 8;
             state.diary.water = w; saveData(); renderSaude();
         };
 
-        window.toggleMeal = (meal, isChecked) => {
-            if(isChecked) playSound('ding'); else playSound('pop');
-            state.diary.meals[meal] = isChecked;
-            saveData();
+        window.toggleMeal = (meal, isChecked, event) => {
+            if(isChecked) { playSuccessSound(); fireConfetti(event); }
+            state.diary.meals[meal] = isChecked; saveData();
         };
 
         window.addMed = (e) => {
@@ -511,28 +997,20 @@
             const input = document.getElementById('new-med-input');
             const name = input.value.trim();
             if(!name) return;
-            playSound('pop');
             state.meds.push({ id: Date.now().toString(), name });
             input.value = ''; saveData(); renderMeds(); renderSaude();
         };
 
-        window.delMed = (id) => {
-            playSound('pop');
-            state.meds = state.meds.filter(m => m.id !== id);
-            delete state.dailyMeds[id];
-            saveData(); renderMeds(); renderSaude();
+        window.delMed = (id) => { state.meds = state.meds.filter(m => m.id !== id); delete state.dailyMeds[id]; saveData(); renderMeds(); renderSaude(); };
+
+        window.toggleMed = (id, isTaken, event) => {
+            if (isTaken) { playSuccessSound(); fireConfetti(event); }
+            state.dailyMeds[id] = isTaken; saveData(); renderSaude();
         };
 
-        window.toggleMed = (id, isTaken) => {
-            if (isTaken) playSound('ding'); else playSound('pop');
-            state.dailyMeds[id] = isTaken;
-            saveData(); renderSaude();
-        };
-
-        function renderMeds() { // Renderiza na aba Perfil (Modal)
-            const list = document.getElementById('perfil-meds-list');
+        function renderMeds() {
+            const list = document.getElementById('meds-manage-list');
             list.innerHTML = '';
-            if (state.meds.length === 0) { list.innerHTML = '<p class="text-xs text-gray-400">Nenhum medicamento.</p>'; return; }
             state.meds.forEach(med => {
                 const el = document.createElement('div');
                 el.className = 'flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm';
@@ -541,28 +1019,25 @@
             });
         }
 
-        function renderSaude() { // Renderiza aba Saúde
-            // Agua
+        function renderSaude() {
             document.getElementById('water-count').textContent = `${state.diary.water}/8`;
             const vis = document.getElementById('water-visuals'); vis.innerHTML = '';
             for(let i=0; i<8; i++){
                 vis.innerHTML += `<i class="fa-solid fa-droplet text-[10px] ${i < state.diary.water ? 'text-blue-400' : 'text-gray-200'}"></i>`;
             }
-            // Meals
-            ['cafe', 'almoco', 'janta'].forEach(m => {
-                document.getElementById(`cb-meal-${m}`).checked = state.diary.meals[m] || false;
-            });
-            // Meds
+            ['cafe', 'almoco', 'janta'].forEach(m => { document.getElementById(`cb-meal-${m}`).checked = state.diary.meals[m] || false; });
+            
             const list = document.getElementById('saude-meds-list');
             list.innerHTML = '';
-            if (state.meds.length === 0) { list.innerHTML = '<p class="text-xs text-gray-400 py-4 text-center">Configure suas medicações no Perfil.</p>'; return; }
+            if (state.meds.length === 0) list.innerHTML = '<p class="text-xs text-gray-400 py-4 text-center">Nenhuma medicação adicionada.</p>';
+            
             state.meds.forEach(med => {
                 const isTaken = state.dailyMeds[med.id] === true;
                 const el = document.createElement('label');
                 el.className = `flex items-center justify-between p-4 cursor-pointer tap-effect transition-colors ${isTaken ? 'bg-cozy-sage/10' : ''}`;
                 el.innerHTML = `
                     <span class="text-sm font-semibold ${isTaken ? 'text-cozy-sage' : 'text-cozy-text'}">${med.name}</span>
-                    <input type="checkbox" class="custom-checkbox w-5 h-5" ${isTaken ? 'checked' : ''} onchange="toggleMed('${med.id}', this.checked)">
+                    <input type="checkbox" class="custom-checkbox w-5 h-5" ${isTaken ? 'checked' : ''} onchange="toggleMed('${med.id}', this.checked, event)">
                 `;
                 list.appendChild(el);
             });
@@ -571,37 +1046,23 @@
         // ==========================================
         // DIÁRIO
         // ==========================================
-        const sensList = [
-            { id: 'fogacho', label: '🔥 Fogacho' }, { id: 'irritabilidade', label: '😠 Irritabilidade' },
-            { id: 'ansiedade', label: '🌪️ Ansiedade' }, { id: 'hiperfoco', label: '🎯 Foco' }, { id: 'nevoa', label: '😴 Névoa' }
-        ];
-
-        window.setMood = (val) => { playSound('pop'); state.diary.mood = val; saveData(); renderDiario(); };
-
+        const sensList = [ { id: 'fogacho', label: '🔥 Fogacho' }, { id: 'irritabilidade', label: '😠 Irritabilidade' }, { id: 'ansiedade', label: '🌪️ Ansiedade' }, { id: 'hiperfoco', label: '🎯 Foco' }, { id: 'nevoa', label: '😴 Névoa' } ];
+        
+        window.setMood = (val) => { state.diary.mood = val; saveData(); renderDiario(); renderChart(); };
         window.toggleSens = (id) => {
-            playSound('pop');
             let sens = state.diary.sensations;
             if (sens.includes(id)) sens = sens.filter(s => s !== id); else sens.push(id);
             state.diary.sensations = sens; saveData(); renderDiario();
         };
-
         window.addCustomEvent = () => {
             const input = document.getElementById('custom-event-input');
             const val = input.value.trim();
             if(!val) return;
-            playSound('pop');
-            state.diary.customEvents.push(val);
-            input.value = ''; saveData(); renderDiario();
+            state.diary.customEvents.push(val); input.value = ''; saveData(); renderDiario();
         };
-        
-        window.removeCustomEvent = (idx) => {
-            playSound('pop');
-            state.diary.customEvents.splice(idx, 1);
-            saveData(); renderDiario();
-        };
+        window.removeCustomEvent = (idx) => { state.diary.customEvents.splice(idx, 1); saveData(); renderDiario(); };
 
         window.saveDiary = () => {
-            playSound('pop');
             const notesEl = document.getElementById('diary-notes');
             if (notesEl) state.diary.notes = notesEl.value;
             saveData();
@@ -610,7 +1071,6 @@
         };
 
         function renderDiario() {
-            // Mood
             document.querySelectorAll('.mood-btn').forEach(btn => {
                 btn.classList.remove('opacity-100', 'grayscale-0', 'scale-110');
                 btn.classList.add('opacity-30', 'grayscale');
@@ -620,7 +1080,6 @@
                 if (el) { el.classList.remove('opacity-30', 'grayscale'); el.classList.add('opacity-100', 'grayscale-0', 'scale-110'); }
             }
 
-            // Sensacoes Fixo
             const container = document.getElementById('sensations-container');
             container.innerHTML = '';
             sensList.forEach(s => {
@@ -628,73 +1087,243 @@
                 container.innerHTML += `<button onclick="toggleSens('${s.id}')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider tap-effect transition-all border ${isSel ? 'bg-cozy-sage text-white border-cozy-sage' : 'bg-white text-gray-500 border-gray-200'}">${s.label}</button>`;
             });
 
-            // Eventos Customizados
             const cContainer = document.getElementById('custom-events-container');
             cContainer.innerHTML = '';
             state.diary.customEvents.forEach((ev, i) => {
                 cContainer.innerHTML += `<div class="px-3 py-1.5 rounded-lg bg-cozy-accent text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-2"><span>${ev}</span> <button onclick="removeCustomEvent(${i})" class="opacity-70 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button></div>`;
             });
 
-            // Notas
             const notesEl = document.getElementById('diary-notes');
             if (notesEl && document.activeElement !== notesEl) notesEl.value = state.diary.notes || '';
         }
 
         // ==========================================
-        // GRÁFICO (Chart.js)
+        // CALENDÁRIO VISUAL
         // ==========================================
-        function renderChart() {
-            const ctx = document.getElementById('statsChart').getContext('2d');
+        function renderFullCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
             
-            // Lógica fictícia baseada no dia atual para ilustrar
+            const daysInMonth = 30;
+            const firstDayIndex = 0; 
+            const todayDate = new Date().getDate();
+
+            for(let i=0; i < firstDayIndex; i++) {
+                grid.innerHTML += `<div></div>`;
+            }
+
+            for(let i=1; i <= daysInMonth; i++) {
+                let isToday = i === todayDate;
+                grid.innerHTML += `
+                    <div class="h-10 flex items-center justify-center rounded-xl text-sm font-semibold transition-colors
+                        ${isToday ? 'bg-cozy-sage text-white shadow-sm' : 'text-cozy-text bg-gray-50 hover:bg-gray-100'} cursor-pointer tap-effect">
+                        ${i}
+                    </div>
+                `;
+            }
+        }
+
+        // ==========================================
+        // GRÁFICO
+        // ==========================================
+        let chartInstance = null;
+        window.renderChart = () => {
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            if (chartInstance) { chartInstance.destroy(); } // Limpa o gráfico anterior
+
+            const filter = document.getElementById('chart-filter').value;
+            
             let medsTotal = state.meds.length;
             let medsTaken = Object.values(state.dailyMeds).filter(v=>v).length;
-            let medScore = medsTotal > 0 ? (medsTaken/medsTotal)*2 : 0; // max 2 pontos
-            let waterScore = (state.diary.water/8)*2; // max 2 pontos
-            let mealScore = (Object.values(state.diary.meals).filter(v=>v).length / 3) * 1; // max 1 ponto
-            let habitScore = medScore + waterScore + mealScore; // Max 5 (Para bater com o eixo do Humor que é 1-5)
+            let waterCount = state.diary.water;
+            let mealsCount = Object.values(state.diary.meals).filter(v=>v).length;
 
-            // Mock 6 dias + Hoje
-            const moodData = [3, 2, 4, 5, 4, 3, state.diary.mood || null];
-            const habitData = [2, 1, 4, 5, 3.5, 2, habitScore]; 
+            let todayBarValue = 0;
+            let barLabel = "";
+            let mockBarData = [];
 
-            new Chart(ctx, {
-                type: 'bar', // Base chart
+            // Tudo normalizado para base 5 para casar com o gráfico do humor
+            if (filter === 'geral') {
+                barLabel = 'Índice de Hábitos (Média)';
+                let medScore = medsTotal > 0 ? (medsTaken/medsTotal)*1.66 : 0;
+                let waterScore = (waterCount/8)*1.66;
+                let mealScore = (mealsCount/3)*1.66;
+                todayBarValue = medScore + waterScore + mealScore;
+                mockBarData = [2.5, 1.2, 4, 5, 3.5, 2, todayBarValue];
+            } else if (filter === 'agua') {
+                barLabel = 'Aderência à Água';
+                todayBarValue = (waterCount / 8) * 5;
+                mockBarData = [1.2, 2.5, 4.3, 5, 2, 3, todayBarValue];
+            } else if (filter === 'refeicoes') {
+                barLabel = 'Aderência às Refeições';
+                todayBarValue = (mealsCount / 3) * 5;
+                mockBarData = [5, 3.3, 5, 1.6, 5, 3.3, todayBarValue];
+            } else if (filter === 'remedios') {
+                barLabel = 'Aderência aos Medicamentos';
+                todayBarValue = medsTotal > 0 ? (medsTaken / medsTotal) * 5 : 0;
+                mockBarData = [5, 5, 0, 5, 5, 5, todayBarValue];
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
                 data: {
                     labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Hoje'],
                     datasets: [
                         {
                             type: 'line',
                             label: 'Humor',
-                            data: moodData,
+                            data: [3, 2, 4, 5, 4, 3, state.diary.mood || null],
                             borderColor: '#3a3a3a',
                             borderWidth: 3,
                             pointBackgroundColor: '#fff',
-                            pointBorderColor: '#3a3a3a',
-                            pointRadius: 4,
                             tension: 0.3,
                             yAxisID: 'y'
                         },
                         {
                             type: 'bar',
-                            label: 'Índice de Hábitos',
-                            data: habitData,
-                            backgroundColor: 'rgba(139, 156, 138, 0.4)', // Sage com alpha
+                            label: barLabel,
+                            data: mockBarData,
+                            backgroundColor: 'rgba(139, 156, 138, 0.5)',
                             borderRadius: 4,
                             yAxisID: 'y'
                         }
                     ]
                 },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: {font: {size: 10}} } },
-                    scales: {
-                        y: { min: 0, max: 5, ticks: { stepSize: 1, font: {size: 10} }, grid: {color: '#f0f0f0'} },
-                        x: { grid: {display: false}, ticks: { font: {size: 10} } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const original = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                    original.forEach(label => {
+                                        if (label.text === 'Humor') {
+                                            label.text = '— Humor'; 
+                                            label.pointStyle = 'line';
+                                        }
+                                    });
+                                    return original;
+                                },
+                                usePointStyle: true,
+                            }
+                        }
                     }
                 }
             });
         }
+
+        // ==========================================
+        // MAPA DE ACONTECIMENTOS (TIMELINE)
+        // ==========================================
+        window.showTimelineInfo = (dayIndex) => {
+            const infoBox = document.getElementById('timeline-info-box');
+            const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Hoje'];
+            let msgs = [];
+            
+            if (dayIndex === 6) { // Hoje (Calculado Dinamicamente)
+                if (state.diary.water < 8) msgs.push(`💧 Faltou beber ${8 - state.diary.water} copo(s) de água.`);
+                else msgs.push('💧 Bateu a meta de água perfeitamente!');
+                
+                const missedMeals = Object.keys(state.diary.meals).filter(m => !state.diary.meals[m]);
+                if (missedMeals.length > 0) msgs.push(`🍽️ Pulou a refeição: ${missedMeals.map(m => m === 'cafe' ? 'café' : m).join(', ')}.`);
+                else msgs.push('🍽️ Fez todas as refeições principais.');
+                
+                const missedMeds = state.meds.filter(m => !state.dailyMeds[m.id]);
+                if (missedMeds.length > 0) msgs.push(`💊 Não tomou o remédio: ${missedMeds.map(m => m.name).join(', ')}.`);
+                else if (state.meds.length > 0) msgs.push('💊 Todos os remédios foram tomados!');
+                else msgs.push('💊 Nenhum remédio cadastrado.');
+            } else { // Dias Anteriores (Mock/Fictício para visualização)
+                const mocks = [
+                    ['💧 Bebeu 4 copos de água.', '💊 Esqueceu a medicação da tarde.', '😫 Relatou enxaqueca (Notas).'], // Seg
+                    ['🍽️ Pulou o café da manhã.', '💊 Tomou todos os remédios.', '🙂 Humor agradável.'], // Ter
+                    ['Tudo perfeitinho! Bateu todas as metas. ✨', '🥰 Super produtiva.'], // Qua
+                    ['💧 Meta de água quase lá (6/8).', '💊 Faltou tomar a Vitamina D.'], // Qui
+                    ['🍽️ Jantou tarde.', '💧 Água 8/8.'], // Sex
+                    ['😴 Muito cansada, dormiu a tarde inteira.', '💊 Esqueceu o adesivo.'] // Sab
+                ];
+                msgs = mocks[dayIndex] || [];
+            }
+            
+            infoBox.innerHTML = `<strong>${days[dayIndex]}:</strong><br><ul class="mt-1.5 space-y-1.5 text-gray-500 font-medium leading-tight">${msgs.map(m => `<li>${m}</li>`).join('')}</ul>`;
+            
+            // Destaque visual do botão selecionado
+            document.querySelectorAll('.timeline-node').forEach((el, i) => {
+                if (i === dayIndex) {
+                    el.classList.add('border-cozy-sage', 'bg-cozy-sage', 'text-white');
+                    el.classList.remove('border-gray-300', 'bg-white', 'text-gray-400');
+                } else {
+                    el.classList.remove('border-cozy-sage', 'bg-cozy-sage', 'text-white');
+                    el.classList.add('border-gray-300', 'bg-white', 'text-gray-400');
+                }
+            });
+        };
+
+        // ==========================================
+        // EXPORTAR DADOS (EXCEL)
+        // ==========================================
+        window.exportDataToExcel = (event) => {
+            if (typeof XLSX === 'undefined') {
+                return;
+            }
+
+            playSuccessSound();
+            fireConfetti(event);
+
+            // 0. Organizar Perfil
+            const profileData = [{
+                'Nome Completo': state.profile?.name || 'Não informado',
+                'Data de Nascimento': state.profile?.birthdate || 'Não informada',
+                'E-mail': state.profile?.email || 'Não informado',
+                'Data de Exportação': state.lastDate
+            }];
+
+            // 1. Organizar Tarefas
+            const tasksData = state.tasks.map(t => ({
+                'Data': state.lastDate,
+                'Tarefa': t.text,
+                'Categoria': t.cat,
+                'Prioridade': t.prio,
+                'Status': t.completed ? 'Concluída' : 'Pendente'
+            }));
+
+            // 2. Organizar Saúde
+            const saudeData = [{
+                'Data': state.lastDate,
+                'Água (Copos)': state.diary.water,
+                'Café da Manhã': state.diary.meals.cafe ? 'Sim' : 'Não',
+                'Almoço': state.diary.meals.almoco ? 'Sim' : 'Não',
+                'Jantar': state.diary.meals.janta ? 'Sim' : 'Não',
+                'Humor (1-5)': state.diary.mood || 'Não registrado'
+            }];
+
+            // 3. Organizar Medicamentos
+            const medsData = state.meds.map(m => ({
+                'Data': state.lastDate,
+                'Medicamento': m.name,
+                'Tomado hoje?': state.dailyMeds[m.id] ? 'Sim' : 'Não'
+            }));
+
+            // 4. Organizar Diário
+            const diarioData = [{
+                'Data': state.lastDate,
+                'Sensações': state.diary.sensations.join(', ') || 'Nenhuma',
+                'Eventos': state.diary.customEvents.join(', ') || 'Nenhum',
+                'Notas': state.diary.notes || ''
+            }];
+
+            // Criar planilhas e o arquivo Excel
+            const wb = XLSX.utils.book_new();
+            
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(profileData), "Perfil");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(tasksData.length ? tasksData : [{'Mensagem': 'Nenhuma tarefa'}]), "Tarefas");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(saudeData), "Saúde");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(medsData.length ? medsData : [{'Mensagem': 'Nenhum medicamento'}]), "Medicamentos");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(diarioData), "Diário");
+
+            XLSX.writeFile(wb, `MeuRitmo_${state.lastDate.replace(/\//g, '-')}.xlsx`);
+        };
 
         // ==========================================
         // INICIALIZAÇÃO
@@ -703,13 +1332,26 @@
             const options = { weekday: 'short', day: 'numeric', month: 'short' };
             document.getElementById('header-date').textContent = new Date().toLocaleDateString('pt-BR', options);
             
+            // Lógica de saudação de acordo com o horário atual
+            const hr = new Date().getHours();
+            let saudacao = "Boa noite";
+            if (hr >= 5 && hr < 12) saudacao = "Bom dia";
+            else if (hr >= 12 && hr < 18) saudacao = "Boa tarde";
+            
+            const greetingEl = document.getElementById('greeting-text');
+            if (greetingEl) greetingEl.textContent = saudacao;
+            
             loadData();
+            renderProfile();
             renderTasks();
             renderMeds();
             renderSaude();
             renderDiario();
+            renderFullCalendar();
+            
+            // Inicializa a aba de timeline exibindo "Hoje" (índice 6)
+            showTimelineInfo(6);
         };
-
     </script>
 </body>
 </html>
