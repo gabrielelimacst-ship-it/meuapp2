@@ -2,435 +2,714 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coletivo Alicerce | Organize sua Revolta</title>
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Meu Ritmo - Rotina & Bem-estar</title>
     
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS & Font Awesome & Chart.js -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Configuração de Cores TDAH-Friendly (Cozy) -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        brand: {
-                            dark: '#2b2d42',
-                            light: '#f8f9fa',
-                            yellow: '#ffca28',
-                            coral: '#ef476f'
+                        cozy: {
+                            bg: '#f9f6f0',
+                            card: '#ffffff',
+                            sage: '#8b9c8a',
+                            sageLight: '#d2dcd1',
+                            text: '#3a3a3a',
+                            textLight: '#7a7a7a',
+                            accent: '#d9c5b2',
+                            warning: '#e6c88a',
+                            danger: '#d98b7e'
                         }
-                    },
-                    fontFamily: {
-                        sans: ['Poppins', 'sans-serif'],
-                        hand: ['Caveat', 'cursive']
-                    },
-                    boxShadow: {
-                        'soft': '0 10px 25px -5px rgba(43, 45, 66, 0.1), 0 8px 10px -6px rgba(43, 45, 66, 0.1)',
                     }
                 }
             }
         }
     </script>
-
-    <!-- D3.js -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-
+    
     <style>
-        /* Scrollytelling Setup */
-        html {
-            scroll-behavior: smooth;
-        }
-        
         body {
-            margin: 0;
-            padding: 0;
-            background-color: theme('colors.brand.light');
-            color: theme('colors.brand.dark');
-            overflow-x: hidden;
-        }
-
-        /* Marker Highlight Effect */
-        .highlight-marker {
-            position: relative;
-            z-index: 1;
-        }
-        .highlight-marker::before {
-            content: "";
-            position: absolute;
-            z-index: -1;
-            bottom: 2px;
-            left: -2%;
-            width: 104%;
-            height: 40%;
-            background-color: theme('colors.brand.yellow');
-            border-radius: 4px;
-            transform: rotate(-1deg);
-            transition: all 0.3s ease;
-        }
-
-        .highlight-coral::before {
-            background-color: theme('colors.brand.coral');
-        }
-
-        /* Hand-drawn tape effect */
-        .tape {
-            background-color: rgba(255, 202, 40, 0.8);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transform: rotate(-2deg);
-            padding: 10px 20px;
-            display: inline-block;
-            border-radius: 2px 255px 3px 25px / 255px 5px 225px 3px;
-        }
-
-        /* Animations for elements */
-        .fade-up {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-        }
-        .fade-up.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Map Styles */
-        .state-path {
-            fill: #e9ecef;
-            stroke: #ced4da;
-            stroke-width: 1.5px;
-            stroke-linejoin: round;
-            transition: fill 0.3s;
-        }
-        .bg-dark-map .state-path {
-            fill: #3a3d57;
-            stroke: #2b2d42;
+            background-color: #e5e5e5;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
         
-        /* Custom Scrollbar for inner elements */
-        .custom-scroll::-webkit-scrollbar { width: 8px; }
-        .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: theme('colors.brand.coral'); border-radius: 10px; }
+        .iphone-container {
+            width: 100%; height: 100vh; background-color: #f9f6f0;
+            position: relative; overflow: hidden; display: flex; flex-direction: column; color: #3a3a3a;
+        }
+        
+        @media (min-width: 640px) {
+            .iphone-container {
+                width: 390px; height: 844px; border-radius: 40px;
+                box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 10px #ffffff; margin: 20px auto;
+            }
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .tap-effect { transition: transform 0.15s ease, opacity 0.2s ease, background-color 0.2s ease; cursor: pointer; }
+        .tap-effect:active { transform: scale(0.92); }
+        
+        @keyframes slideUpFade {
+            0% { opacity: 0; transform: translateY(15px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: slideUpFade 0.3s ease-out forwards; }
+
+        .custom-checkbox {
+            appearance: none; width: 22px; height: 22px; border: 2px solid #d2dcd1; border-radius: 50%;
+            outline: none; cursor: pointer; transition: all 0.2s ease; position: relative; flex-shrink: 0;
+            background-color: #fff;
+        }
+        .custom-checkbox:checked { background-color: #8b9c8a; border-color: #8b9c8a; }
+        .custom-checkbox:checked::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            color: white; font-size: 10px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+            z-index: 50; display: none; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; justify-content: center; align-items: flex-end; }
+        .modal-content {
+            background: #f9f6f0; width: 100%; border-radius: 30px 30px 0 0; padding: 24px;
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 85vh; overflow-y: auto;
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
     </style>
 </head>
-<body class="antialiased">
+<body onclick="initAudioOnFirstClick()">
 
-    <!-- Seção 1 (Início) -->
-    <section class="min-h-screen flex items-center py-20 bg-brand-dark text-brand-light relative overflow-hidden">
-        <!-- Decoração de fundo -->
-        <div class="absolute top-10 right-10 w-64 h-64 bg-brand-yellow rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-        <div class="absolute bottom-10 left-10 w-72 h-72 bg-brand-coral rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+    <div class="iphone-container">
         
-        <div class="max-w-5xl mx-auto w-full px-6 z-10 fade-up">
-            <h1 class="text-5xl md:text-7xl lg:text-8xl font-extrabold leading-tight mb-6">
-                A campanha acabou, <br>
-                <span class="text-brand-yellow">mas a luta não.</span>
-            </h1>
-            
-            <p class="text-xl md:text-3xl font-medium mt-4 mb-16 text-gray-300">
-                Passo a passo para se organizar politicamente.
-            </p>
+        <!-- Header Fixo -->
+        <header class="pt-12 pb-3 px-6 bg-cozy-bg/95 backdrop-blur-md sticky top-0 z-20 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-cozy-text" id="header-title">Tarefas</h1>
+                <p class="text-[10px] text-cozy-textLight font-bold mt-1 uppercase tracking-wider" id="header-date"></p>
+            </div>
+            <img src="https://placehold.co/100x100/d2dcd1/8b9c8a?text=Foto" alt="Perfil" class="w-10 h-10 rounded-full border-2 border-white shadow-sm tap-effect object-cover" onclick="openModal('perfil-modal')">
+        </header>
 
-            <div class="mt-8 transform -rotate-3 inline-block">
-                <div class="font-hand text-3xl md:text-5xl text-brand-dark bg-brand-yellow px-6 py-3 rounded-xl shadow-lg border-2 border-brand-yellow">
-                    A política se faz de forma cotidiana!
+        <!-- Área Principal -->
+        <main class="flex-1 overflow-y-auto hide-scrollbar px-6 pb-28">
+            
+            <!-- ABA 1: TAREFAS -->
+            <div id="tab-tarefas" class="tab-content active h-full flex flex-col">
+                
+                <!-- O que precisamos fazer hoje? (2º Quarto da tela) -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-6 shrink-0">
+                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-3">O que precisamos fazer hoje?</h3>
+                    <input type="text" id="task-input" placeholder="Nova tarefa..." class="w-full bg-gray-50 rounded-xl p-3 text-sm outline-none border border-gray-100 text-cozy-text mb-4 font-medium focus:border-cozy-sageLight">
+                    
+                    <div class="space-y-4">
+                        <!-- Categorias -->
+                        <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1" id="category-selector">
+                            <button class="cat-btn active whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wide bg-cozy-sage text-white tap-effect" data-val="Rotina">🏠 Rotina</button>
+                            <button class="cat-btn whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-500 tap-effect" data-val="Pessoal">💆‍♀️ Pessoal</button>
+                            <button class="cat-btn whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-500 tap-effect" data-val="Trabalho">💻 Trabalho</button>
+                            <button class="cat-btn whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-500 tap-effect" data-val="Lazer">🎨 Lazer</button>
+                            <button class="cat-btn whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-500 tap-effect" data-val="Saúde">💊 Saúde</button>
+                        </div>
+                        
+                        <!-- Prioridade e Botão -->
+                        <div class="flex justify-between items-center">
+                            <div class="flex gap-2 bg-gray-50 p-1 rounded-full">
+                                <button class="prio-btn whitespace-nowrap px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-cozy-sageLight text-cozy-text tap-effect transition-colors" data-val="Baixa">Baixa</button>
+                                <button class="prio-btn active whitespace-nowrap px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-cozy-warning text-white tap-effect transition-colors" data-val="Média">Média</button>
+                                <button class="prio-btn whitespace-nowrap px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-transparent text-gray-400 tap-effect transition-colors" data-val="Alta">Alta</button>
+                            </div>
+                            <button onclick="addTask()" class="bg-cozy-text text-white w-8 h-8 rounded-full flex justify-center items-center tap-effect shadow-md"><i class="fa-solid fa-plus text-sm"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Tarefas (3º e 4º Quartos) -->
+                <div class="flex-1">
+                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-3"><i class="fa-solid fa-list-check mr-1 text-cozy-sage"></i> Minhas Tarefas</h3>
+                    <div class="space-y-3 pb-4" id="task-list">
+                        <!-- Tarefas injetadas via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 2: SAÚDE -->
+            <div id="tab-saude" class="tab-content">
+                <h2 class="text-lg font-bold text-cozy-text mb-4">Hábitos e Saúde</h2>
+                
+                <!-- Água e Refeições -->
+                <div class="flex gap-4 mb-6">
+                    <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex-1 flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-[10px] font-bold text-cozy-textLight uppercase tracking-wider"><i class="fa-solid fa-droplet text-blue-300 mr-1"></i> Água</h3>
+                            <span class="text-sm font-bold text-cozy-text" id="water-count">0/8</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <button onclick="updateWater(-1)" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 tap-effect font-bold">-</button>
+                            <div class="flex-1 flex justify-center gap-0.5 px-2" id="water-visuals"></div>
+                            <button onclick="updateWater(1)" class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 tap-effect font-bold">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 flex-1">
+                        <h3 class="text-[10px] font-bold text-cozy-textLight uppercase tracking-wider mb-3"><i class="fa-solid fa-utensils text-cozy-accent mr-1"></i> Refeições</h3>
+                        <div class="flex flex-col gap-2">
+                            <label class="flex items-center gap-2 tap-effect">
+                                <input type="checkbox" class="custom-checkbox w-4 h-4" onchange="toggleMeal('cafe', this.checked)" id="cb-meal-cafe">
+                                <span class="text-xs font-semibold text-cozy-text">Café</span>
+                            </label>
+                            <label class="flex items-center gap-2 tap-effect">
+                                <input type="checkbox" class="custom-checkbox w-4 h-4" onchange="toggleMeal('almoco', this.checked)" id="cb-meal-almoco">
+                                <span class="text-xs font-semibold text-cozy-text">Almoço</span>
+                            </label>
+                            <label class="flex items-center gap-2 tap-effect">
+                                <input type="checkbox" class="custom-checkbox w-4 h-4" onchange="toggleMeal('janta', this.checked)" id="cb-meal-janta">
+                                <span class="text-xs font-semibold text-cozy-text">Janta</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Medicamentos -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-[10px] font-bold text-cozy-textLight uppercase tracking-wider"><i class="fa-solid fa-pills mr-1 text-cozy-danger/70"></i> Medicações do Dia</h3>
+                        <button onclick="openModal('perfil-modal')" class="text-[9px] font-bold text-cozy-sage uppercase tracking-wider tap-effect bg-cozy-sageLight/30 px-2 py-1 rounded">Gerenciar</button>
+                    </div>
+                    <div id="saude-meds-list" class="space-y-0 divide-y divide-gray-50">
+                        <!-- Remédios renderizados aqui (igualdade visual) -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 3: DIÁRIO -->
+            <div id="tab-diario" class="tab-content">
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-5">
+                    
+                    <!-- Humor -->
+                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-4">Como você está agora?</h3>
+                    <div class="flex justify-between mb-8 px-1">
+                        <button onclick="setMood(1)" id="mood-1" class="mood-btn text-3xl opacity-30 tap-effect grayscale transition-all">😫</button>
+                        <button onclick="setMood(2)" id="mood-2" class="mood-btn text-3xl opacity-30 tap-effect grayscale transition-all">☹️</button>
+                        <button onclick="setMood(3)" id="mood-3" class="mood-btn text-3xl opacity-30 tap-effect grayscale transition-all">😐</button>
+                        <button onclick="setMood(4)" id="mood-4" class="mood-btn text-3xl opacity-30 tap-effect grayscale transition-all">🙂</button>
+                        <button onclick="setMood(5)" id="mood-5" class="mood-btn text-3xl opacity-30 tap-effect grayscale transition-all">🥰</button>
+                    </div>
+
+                    <!-- Sensações (Fixo) -->
+                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-3">Sintomas & Sensações</h3>
+                    <div class="flex flex-wrap gap-2 mb-6" id="sensations-container">
+                        <!-- Injetados via JS -->
+                    </div>
+
+                    <!-- Eventos Personalizados -->
+                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-3">Eventos do Dia</h3>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="custom-event-input" placeholder="Ex: Notícia ruim, Presente..." class="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-xs outline-none border border-gray-100 text-cozy-text focus:border-cozy-sageLight">
+                        <button onclick="addCustomEvent()" class="bg-cozy-text text-white px-3 rounded-xl text-xs font-bold tap-effect">Add</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mb-6 empty:hidden" id="custom-events-container">
+                        <!-- Tags de eventos personalizados injetados via JS -->
+                    </div>
+
+                    <!-- Notas -->
+                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-3">Notas</h3>
+                    <textarea id="diary-notes" class="w-full bg-gray-50 rounded-xl p-3 text-xs outline-none border border-gray-100 text-cozy-text focus:border-cozy-sageLight resize-none h-20 mb-4" placeholder="Algum outro detalhe ou pensamento?"></textarea>
+
+                    <button onclick="saveDiary()" class="w-full bg-cozy-sage text-white py-3 rounded-2xl text-sm font-bold uppercase tracking-wide tap-effect shadow-sm">
+                        Registrar Diário
+                    </button>
+                    <p id="save-msg" class="text-center text-xs text-cozy-sage mt-3 font-bold opacity-0 transition-opacity">Salvo com sucesso!</p>
+                </div>
+            </div>
+
+            <!-- ABA 4: STATS -->
+            <div id="tab-stats" class="tab-content">
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-5">
+                    <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-2">Humor x Hábitos (Últimos 7 dias)</h3>
+                    <p class="text-[10px] text-gray-400 mb-4 leading-tight">A linha mostra seu Humor. As barras mostram sua aderência aos hábitos (Remédios, Água, Comida).</p>
+                    <div class="relative h-56 w-full"><canvas id="statsChart"></canvas></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Navegação Inferior -->
+        <nav class="absolute bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-gray-100 pb-safe pt-2 px-6 pb-6 z-30">
+            <div class="flex justify-between items-center">
+                <button onclick="switchTab('tarefas')" class="nav-btn active flex flex-col items-center gap-1.5 text-cozy-sage w-16 tap-effect" data-target="tarefas">
+                    <i class="fa-solid fa-list-check text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wide">Tarefas</span>
+                </button>
+                <button onclick="switchTab('saude')" class="nav-btn flex flex-col items-center gap-1.5 text-gray-400 w-16 tap-effect" data-target="saude">
+                    <i class="fa-solid fa-heart-pulse text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wide">Saúde</span>
+                </button>
+                <button onclick="switchTab('diario')" class="nav-btn flex flex-col items-center gap-1.5 text-gray-400 w-16 tap-effect" data-target="diario">
+                    <i class="fa-solid fa-book-open text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wide">Diário</span>
+                </button>
+                <button onclick="switchTab('stats')" class="nav-btn flex flex-col items-center gap-1.5 text-gray-400 w-16 tap-effect" data-target="stats">
+                    <i class="fa-solid fa-chart-pie text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wide">Stats</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- MODAL: MEU PERFIL -->
+        <div id="perfil-modal" class="modal-overlay" onclick="closeModal(event, 'perfil-modal')">
+            <div class="modal-content hide-scrollbar" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-cozy-text">Meu Perfil</h2>
+                    <button onclick="forceCloseModal('perfil-modal')" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 tap-effect flex justify-center items-center"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                
+                <div class="flex items-center gap-4 mb-8">
+                    <img src="https://placehold.co/150x150/d2dcd1/8b9c8a?text=Foto" class="w-16 h-16 rounded-full object-cover">
+                    <div>
+                        <h3 class="text-sm font-bold text-cozy-text">Visitante (Local)</h3>
+                        <p class="text-xs text-gray-400">Dados salvos no seu aparelho</p>
+                    </div>
+                </div>
+
+                <h3 class="text-xs font-bold text-cozy-textLight uppercase tracking-wider mb-4"><i class="fa-solid fa-pills mr-1"></i> Gerenciar Medicamentos</h3>
+                <form class="flex gap-2 mb-4" onsubmit="addMed(event)">
+                    <input type="text" id="new-med-input" placeholder="Nome da medicação..." required class="flex-1 bg-white rounded-xl px-4 py-3 text-sm outline-none border border-gray-200 text-cozy-text font-medium">
+                    <button type="submit" class="bg-cozy-sage text-white px-5 rounded-xl text-sm font-bold tap-effect">Add</button>
+                </form>
+                
+                <div class="space-y-2 mb-8" id="perfil-meds-list">
+                    <!-- Lista de Medicamentos (Gerenciamento) -->
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Seção 2 -->
-    <section class="min-h-screen flex items-center py-20 bg-brand-light text-brand-dark">
-        <div class="max-w-5xl mx-auto w-full px-6 fade-up">
-            <h2 class="text-4xl md:text-6xl font-bold mb-8 text-brand-dark">
-                Primeiro: <span class="highlight-marker highlight-coral">entenda o que você pode fazer</span>
-            </h2>
-            
-            <p class="text-lg md:text-2xl font-medium mb-12 text-gray-700 max-w-3xl">
-                Não existe uma única forma de participar. E é possível se organizar politicamente nos espaços que você já ocupa:
-            </p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-                <div class="bg-white p-6 rounded-2xl shadow-soft flex items-start gap-4 hover:-translate-y-1 transition-transform duration-300 border-t-4 border-brand-coral">
-                    <div class="bg-brand-coral/10 text-brand-coral p-3 rounded-full shrink-0">
-                        <i class="fa-solid fa-graduation-cap text-xl"></i>
-                    </div>
-                    <span class="text-lg font-semibold mt-2">Movimento estudantil na escola ou na universidade</span>
-                </div>
-                
-                <div class="bg-white p-6 rounded-2xl shadow-soft flex items-start gap-4 hover:-translate-y-1 transition-transform duration-300 border-t-4 border-brand-yellow">
-                    <div class="bg-brand-yellow/20 text-brand-yellow p-3 rounded-full shrink-0">
-                        <i class="fa-solid fa-rainbow text-xl"></i>
-                    </div>
-                    <span class="text-lg font-semibold mt-2">Movimento de mulheres, negros e negras, LGBTQIAP+</span>
-                </div>
-                
-                <div class="bg-white p-6 rounded-2xl shadow-soft flex items-start gap-4 hover:-translate-y-1 transition-transform duration-300 border-t-4 border-brand-dark">
-                    <div class="bg-brand-dark/10 text-brand-dark p-3 rounded-full shrink-0">
-                        <i class="fa-solid fa-house-chimney-user text-xl"></i>
-                    </div>
-                    <span class="text-lg font-semibold mt-2">Organização de bairros e comunidade</span>
-                </div>
-                
-                <div class="bg-white p-6 rounded-2xl shadow-soft flex items-start gap-4 hover:-translate-y-1 transition-transform duration-300 border-t-4 border-brand-coral">
-                    <div class="bg-brand-coral/10 text-brand-coral p-3 rounded-full shrink-0">
-                        <i class="fa-solid fa-drum text-xl"></i>
-                    </div>
-                    <span class="text-lg font-semibold mt-2">Organização em terreiros, quilombos e territórios</span>
-                </div>
-            </div>
-
-            <div class="text-center">
-                <span class="tape font-hand text-3xl md:text-5xl text-brand-dark">
-                    O importante é saber o que te move!
-                </span>
-            </div>
-        </div>
-    </section>
-
-    <!-- Seção 3 -->
-    <section class="min-h-screen flex items-center py-20 bg-brand-yellow text-brand-dark">
-        <div class="max-w-4xl mx-auto w-full px-6 fade-up">
-            <h2 class="text-4xl md:text-6xl font-bold mb-8">
-                Depois, procure o que <span class="text-white highlight-marker">já existe na sua cidade</span>
-            </h2>
-            
-            <p class="text-xl md:text-2xl font-medium mb-12">
-                Muitas organizações já estão atuando no seu território. Veja algumas:
-            </p>
-            
-            <ul class="space-y-6">
-                <li class="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm flex items-center gap-4 text-xl md:text-2xl font-semibold">
-                    <div class="text-brand-coral"><i class="fa-solid fa-arrow-right"></i></div>
-                    Diretórios municipais de partidos
-                </li>
-                <li class="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm flex items-center gap-4 text-xl md:text-2xl font-semibold">
-                    <div class="text-brand-coral"><i class="fa-solid fa-arrow-right"></i></div>
-                    Movimentos sociais e coletivos locais
-                </li>
-                <li class="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm flex items-center gap-4 text-xl md:text-2xl font-semibold">
-                    <div class="text-brand-coral"><i class="fa-solid fa-arrow-right"></i></div>
-                    Sindicatos, diretórios e centros acadêmicos
-                </li>
-            </ul>
-        </div>
-    </section>
-
-    <!-- Seção 4 -->
-    <section class="min-h-screen flex items-center py-20 bg-brand-light text-brand-dark">
-        <div class="max-w-4xl mx-auto w-full px-6 fade-up text-center">
-            <h2 class="text-4xl md:text-6xl font-bold mb-6">
-                Entenda <span class="highlight-marker">como funciona</span> e <span class="highlight-marker">onde atuam</span>
-            </h2>
-            
-            <p class="font-hand text-4xl text-brand-coral mb-12">
-                Como descobrir?
-            </p>
-            
-            <div class="flex flex-col md:flex-row justify-center gap-8">
-                <div class="bg-white p-8 rounded-3xl shadow-soft flex-1 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 bg-brand-dark text-white rounded-full flex items-center justify-center text-2xl mb-4">
-                        <i class="fa-solid fa-mobile-screen"></i>
-                    </div>
-                    <p class="text-lg font-semibold">Veja as redes sociais e o site</p>
-                </div>
-                
-                <div class="bg-white p-8 rounded-3xl shadow-soft flex-1 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 bg-brand-coral text-white rounded-full flex items-center justify-center text-2xl mb-4">
-                        <i class="fa-solid fa-calendar-days"></i>
-                    </div>
-                    <p class="text-lg font-semibold">Observe se há eventos e reuniões na sua cidade</p>
-                </div>
-                
-                <div class="bg-white p-8 rounded-3xl shadow-soft flex-1 flex flex-col items-center text-center">
-                    <div class="w-16 h-16 bg-brand-yellow text-brand-dark rounded-full flex items-center justify-center text-2xl mb-4">
-                        <i class="fa-solid fa-comments"></i>
-                    </div>
-                    <p class="text-lg font-semibold">Converse com pessoas que já participam</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Seção 5 (Mapa Interativo) -->
-    <section class="min-h-screen flex items-center py-20 bg-brand-dark text-brand-light bg-dark-map">
-        <div class="max-w-6xl mx-auto w-full px-6 flex flex-col h-full fade-up">
-            
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-5xl font-bold mb-4">
-                    Gostou do guia e gostaria de nos conhecer?
-                </h2>
-                <p class="font-hand text-3xl md:text-4xl text-brand-yellow">
-                    Organize sua revolta, conheça o Alicerce!
-                </p>
-            </div>
-
-            <div class="flex flex-col lg:flex-row gap-8 items-center bg-[#232536] rounded-3xl p-6 shadow-xl border border-white/5">
-                
-                <!-- SVG Map Container -->
-                <div class="w-full lg:w-1/2 flex items-center justify-center relative">
-                    <div id="map-container" class="w-full h-80 lg:h-[500px] flex justify-center items-center">
-                        <!-- D3 SVG Here -->
-                    </div>
-                </div>
-
-                <!-- Cards Container -->
-                <div class="w-full lg:w-1/2 flex flex-col gap-4 overflow-y-auto custom-scroll pr-4 max-h-[500px]" id="cards-container">
-                    <!-- Gerado via JS -->
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <!-- Seção 6 -->
-    <section class="py-32 bg-brand-coral text-white text-center">
-        <div class="max-w-3xl mx-auto px-6 fade-up">
-            <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i class="fa-solid fa-map-location-dot text-4xl"></i>
-            </div>
-            
-            <h2 class="text-4xl md:text-6xl font-bold mb-6">
-                Sua cidade não está no mapa?
-            </h2>
-            
-            <p class="text-xl md:text-2xl font-medium mb-12 text-white/90">
-                Se você tem vontade de organizar pessoas no seu território, nós podemos ajudar.
-            </p>
-            
-            <button class="bg-brand-yellow text-brand-dark font-bold text-xl px-10 py-5 rounded-full hover:bg-white hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                Quero me organizar!
-            </button>
-        </div>
-    </section>
+    </div>
 
     <script>
-        // Intersection Observer para animações de fade-up
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
+        // ==========================================
+        // ÁUDIO (Feedback Tátil/Sonoro - TDAH)
+        // ==========================================
+        let audioCtx = null;
+        let audioInited = false;
+
+        function initAudioOnFirstClick() {
+            if (audioInited) return;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            gain.gain.value = 0;
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.01);
+            audioInited = true;
+        }
+
+        function playSound(type) {
+            if (!audioCtx || audioCtx.state === 'suspended') {
+                if(audioCtx) audioCtx.resume(); else return;
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            
+            if (type === 'pop') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
+                gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'ding') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(700, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.2, now + 0.03);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            }
+        }
+
+        // ==========================================
+        // ESTADO E PERSISTÊNCIA
+        // ==========================================
+        let todayStr = new Date().toLocaleDateString('pt-BR');
+        
+        let state = {
+            tasks: [],
+            meds: [], 
+            dailyMeds: {}, 
+            diary: { water: 0, meals: {cafe: false, almoco: false, janta: false}, mood: 0, sensations: [], customEvents: [], notes: '' },
+            lastDate: todayStr
+        };
+
+        function loadData() {
+            const saved = localStorage.getItem('meuRitmo_v2');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                state.tasks = parsed.tasks || [];
+                state.meds = parsed.meds || [];
+                
+                if (parsed.lastDate === todayStr) {
+                    state.dailyMeds = parsed.dailyMeds || {};
+                    state.diary = parsed.diary || { water: 0, meals: {}, mood: 0, sensations: [], customEvents: [], notes: '' };
+                    if(!state.diary.meals) state.diary.meals = {cafe: false, almoco: false, janta: false};
+                    if(!state.diary.customEvents) state.diary.customEvents = [];
+                } else {
+                    state.dailyMeds = {};
+                    state.diary = { water: 0, meals: {cafe: false, almoco: false, janta: false}, mood: 0, sensations: [], customEvents: [], notes: '' };
+                    state.tasks.forEach(t => { if(t.cat === 'Rotina') t.completed = false; }); // Exemplo: desmarcar só rotina ou tudo
+                    state.lastDate = todayStr;
+                }
+            } else {
+                state.meds = [{ id: '1', name: 'Adesivo Hormonal' }, { id: '2', name: 'Vitamina D' }];
+            }
+        }
+
+        function saveData() { localStorage.setItem('meuRitmo_v2', JSON.stringify(state)); }
+
+        // ==========================================
+        // UI GERAL (Abas e Modais)
+        // ==========================================
+        const titles = { 'tarefas': 'Tarefas', 'saude': 'Saúde', 'diario': 'Meu Diário', 'stats': 'Estatísticas' };
+        let chartRendered = false;
+
+        window.switchTab = (tabId) => {
+            playSound('pop');
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.dataset.target === tabId) {
+                    btn.classList.add('text-cozy-sage'); btn.classList.remove('text-gray-400');
+                } else {
+                    btn.classList.remove('text-cozy-sage'); btn.classList.add('text-gray-400');
                 }
             });
-        }, { threshold: 0.1 });
 
-        document.querySelectorAll('.fade-up').forEach((el) => {
-            observer.observe(el);
+            document.getElementById('header-title').textContent = titles[tabId];
+            if(tabId === 'stats' && !chartRendered) { renderChart(); chartRendered = true; }
+        };
+
+        window.openModal = (id) => { document.getElementById(id).classList.add('active'); playSound('pop'); };
+        window.closeModal = (e, id) => { if(e.target.id === id) document.getElementById(id).classList.remove('active'); };
+        window.forceCloseModal = (id) => { document.getElementById(id).classList.remove('active'); playSound('pop'); };
+
+        // ==========================================
+        // TAREFAS
+        // ==========================================
+        let currentTaskCat = "Rotina";
+        let currentTaskPrio = "Média";
+        
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                playSound('pop');
+                document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('bg-cozy-sage', 'text-white'); b.classList.add('bg-gray-100', 'text-gray-500'); });
+                e.target.classList.add('bg-cozy-sage', 'text-white'); e.target.classList.remove('bg-gray-100', 'text-gray-500');
+                currentTaskCat = e.target.dataset.val;
+            });
         });
 
-        // Dados das cidades
-        const cities = [
-            { name: "Porto Alegre, RS", coords: [-51.2177, -30.0346] },
-            { name: "Santa Maria, RS", coords: [-53.8069, -29.6842] },
-            { name: "Pelotas, RS", coords: [-52.3376, -31.7654] },
-            { name: "Alvorada, RS", coords: [-51.0700, -30.0044] },
-            { name: "Florianópolis, SC", coords: [-48.5480, -27.5954] },
-            { name: "Curitiba, PR", coords: [-49.2733, -25.4284] },
-            { name: "São Paulo, SP", coords: [-46.6333, -23.5505] },
-            { name: "Salvador, BA", coords: [-38.5014, -12.9714] }
+        document.querySelectorAll('.prio-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                playSound('pop');
+                document.querySelectorAll('.prio-btn').forEach(b => { 
+                    b.classList.remove('active', 'bg-cozy-sageLight', 'bg-cozy-warning', 'bg-cozy-danger', 'text-white', 'text-cozy-text'); 
+                    b.classList.add('bg-transparent', 'text-gray-400');
+                });
+                
+                let val = e.target.dataset.val;
+                e.target.classList.remove('bg-transparent', 'text-gray-400');
+                e.target.classList.add('active', val==='Baixa'?'bg-cozy-sageLight':val==='Média'?'bg-cozy-warning':'bg-cozy-danger', val==='Baixa'?'text-cozy-text':'text-white');
+                currentTaskPrio = val;
+            });
+        });
+
+        window.addTask = () => {
+            const input = document.getElementById('task-input');
+            const text = input.value.trim();
+            if(!text) return;
+            playSound('pop');
+            state.tasks.push({ id: Date.now().toString(), text, cat: currentTaskCat, prio: currentTaskPrio, completed: false });
+            input.value = ''; saveData(); renderTasks();
+        };
+
+        window.toggleTask = (id, isCompleted) => {
+            if (isCompleted) playSound('ding'); else playSound('pop');
+            const task = state.tasks.find(t => t.id === id);
+            if (task) task.completed = isCompleted;
+            saveData(); renderTasks();
+        };
+
+        window.delTask = (id) => { playSound('pop'); state.tasks = state.tasks.filter(t => t.id !== id); saveData(); renderTasks(); };
+
+        function renderTasks() {
+            const list = document.getElementById('task-list');
+            list.innerHTML = '';
+            if (state.tasks.length === 0) { list.innerHTML = '<p class="text-xs text-gray-400 py-4 text-center">Nenhuma tarefa. Aproveite para descansar!</p>'; return; }
+
+            const sorted = [...state.tasks].sort((a,b) => {
+                if(a.completed !== b.completed) return a.completed ? 1 : -1; // Incompletas em cima
+                // Sort Priority: Alta > Média > Baixa (if needed, simplified here)
+                return 0;
+            });
+
+            const emojis = { 'Rotina': '🏠', 'Pessoal': '💆‍♀️', 'Trabalho': '💻', 'Lazer': '🎨', 'Saúde': '💊' };
+            const prioColors = { 'Baixa': 'text-cozy-sage', 'Média': 'text-cozy-warning', 'Alta': 'text-cozy-danger' };
+
+            sorted.forEach(t => {
+                const el = document.createElement('div');
+                el.className = `bg-white rounded-2xl p-4 shadow-sm border border-gray-50 flex gap-3 items-center transition-all ${t.completed ? 'opacity-50' : ''}`;
+                
+                el.innerHTML = `
+                    <input type="checkbox" class="custom-checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask('${t.id}', this.checked)">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-cozy-text truncate ${t.completed ? 'line-through text-gray-400' : ''}">${t.text}</p>
+                        <div class="flex gap-2 mt-1.5 items-center">
+                            <span class="text-[9px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">${emojis[t.cat]} ${t.cat}</span>
+                            <span class="text-[9px] font-bold uppercase tracking-wider flex items-center ${prioColors[t.prio]}"><i class="fa-solid fa-circle text-[5px] mr-1"></i> ${t.prio}</span>
+                        </div>
+                    </div>
+                    <button onclick="delTask('${t.id}')" class="text-gray-300 hover:text-red-400 p-2 tap-effect"><i class="fa-solid fa-xmark"></i></button>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        // ==========================================
+        // SAÚDE & PERFIL (Medicamentos, Agua, Comida)
+        // ==========================================
+        window.updateWater = (val) => {
+            playSound('pop');
+            let w = state.diary.water + val;
+            if(w < 0) w = 0; if(w > 8) w = 8;
+            state.diary.water = w; saveData(); renderSaude();
+        };
+
+        window.toggleMeal = (meal, isChecked) => {
+            if(isChecked) playSound('ding'); else playSound('pop');
+            state.diary.meals[meal] = isChecked;
+            saveData();
+        };
+
+        window.addMed = (e) => {
+            e.preventDefault();
+            const input = document.getElementById('new-med-input');
+            const name = input.value.trim();
+            if(!name) return;
+            playSound('pop');
+            state.meds.push({ id: Date.now().toString(), name });
+            input.value = ''; saveData(); renderMeds(); renderSaude();
+        };
+
+        window.delMed = (id) => {
+            playSound('pop');
+            state.meds = state.meds.filter(m => m.id !== id);
+            delete state.dailyMeds[id];
+            saveData(); renderMeds(); renderSaude();
+        };
+
+        window.toggleMed = (id, isTaken) => {
+            if (isTaken) playSound('ding'); else playSound('pop');
+            state.dailyMeds[id] = isTaken;
+            saveData(); renderSaude();
+        };
+
+        function renderMeds() { // Renderiza na aba Perfil (Modal)
+            const list = document.getElementById('perfil-meds-list');
+            list.innerHTML = '';
+            if (state.meds.length === 0) { list.innerHTML = '<p class="text-xs text-gray-400">Nenhum medicamento.</p>'; return; }
+            state.meds.forEach(med => {
+                const el = document.createElement('div');
+                el.className = 'flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm';
+                el.innerHTML = `<span class="text-xs font-bold text-cozy-text">${med.name}</span> <button onclick="delMed('${med.id}')" class="text-red-400 p-2 tap-effect"><i class="fa-solid fa-trash-can"></i></button>`;
+                list.appendChild(el);
+            });
+        }
+
+        function renderSaude() { // Renderiza aba Saúde
+            // Agua
+            document.getElementById('water-count').textContent = `${state.diary.water}/8`;
+            const vis = document.getElementById('water-visuals'); vis.innerHTML = '';
+            for(let i=0; i<8; i++){
+                vis.innerHTML += `<i class="fa-solid fa-droplet text-[10px] ${i < state.diary.water ? 'text-blue-400' : 'text-gray-200'}"></i>`;
+            }
+            // Meals
+            ['cafe', 'almoco', 'janta'].forEach(m => {
+                document.getElementById(`cb-meal-${m}`).checked = state.diary.meals[m] || false;
+            });
+            // Meds
+            const list = document.getElementById('saude-meds-list');
+            list.innerHTML = '';
+            if (state.meds.length === 0) { list.innerHTML = '<p class="text-xs text-gray-400 py-4 text-center">Configure suas medicações no Perfil.</p>'; return; }
+            state.meds.forEach(med => {
+                const isTaken = state.dailyMeds[med.id] === true;
+                const el = document.createElement('label');
+                el.className = `flex items-center justify-between p-4 cursor-pointer tap-effect transition-colors ${isTaken ? 'bg-cozy-sage/10' : ''}`;
+                el.innerHTML = `
+                    <span class="text-sm font-semibold ${isTaken ? 'text-cozy-sage' : 'text-cozy-text'}">${med.name}</span>
+                    <input type="checkbox" class="custom-checkbox w-5 h-5" ${isTaken ? 'checked' : ''} onchange="toggleMed('${med.id}', this.checked)">
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        // ==========================================
+        // DIÁRIO
+        // ==========================================
+        const sensList = [
+            { id: 'fogacho', label: '🔥 Fogacho' }, { id: 'irritabilidade', label: '😠 Irritabilidade' },
+            { id: 'ansiedade', label: '🌪️ Ansiedade' }, { id: 'hiperfoco', label: '🎯 Foco' }, { id: 'nevoa', label: '😴 Névoa' }
         ];
 
-        // 1. Gerar os Cards HTML
-        const cardsContainer = document.getElementById('cards-container');
-        cities.forEach(city => {
-            const card = document.createElement('div');
-            card.className = "bg-brand-dark border border-white/10 p-5 rounded-2xl flex items-center justify-between hover:border-brand-coral hover:bg-[#32344d] transition-colors group";
-            card.innerHTML = `
-                <div>
-                    <h3 class="text-xl font-bold text-brand-light group-hover:text-brand-yellow transition-colors">${city.name}</h3>
-                </div>
-                <button class="bg-brand-coral text-white text-sm font-semibold rounded-full px-5 py-2 hover:bg-brand-yellow hover:text-brand-dark transition-colors shadow-sm">
-                    Junte-se a nós
-                </button>
-            `;
-            cardsContainer.appendChild(card);
-        });
+        window.setMood = (val) => { playSound('pop'); state.diary.mood = val; saveData(); renderDiario(); };
 
-        // 2. Lógica D3.js para o Mapa do Brasil
-        const width = 600;
-        const height = 600;
+        window.toggleSens = (id) => {
+            playSound('pop');
+            let sens = state.diary.sensations;
+            if (sens.includes(id)) sens = sens.filter(s => s !== id); else sens.push(id);
+            state.diary.sensations = sens; saveData(); renderDiario();
+        };
 
-        const svg = d3.select("#map-container")
-            .append("svg")
-            .attr("viewBox", `0 0 ${width} ${height}`)
-            .attr("width", "100%")
-            .attr("height", "100%");
+        window.addCustomEvent = () => {
+            const input = document.getElementById('custom-event-input');
+            const val = input.value.trim();
+            if(!val) return;
+            playSound('pop');
+            state.diary.customEvents.push(val);
+            input.value = ''; saveData(); renderDiario();
+        };
+        
+        window.removeCustomEvent = (idx) => {
+            playSound('pop');
+            state.diary.customEvents.splice(idx, 1);
+            saveData(); renderDiario();
+        };
 
-        const projection = d3.geoMercator();
-        const path = d3.geoPath().projection(projection);
-        const geojsonUrl = 'https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson';
+        window.saveDiary = () => {
+            playSound('pop');
+            const notesEl = document.getElementById('diary-notes');
+            if (notesEl) state.diary.notes = notesEl.value;
+            saveData();
+            const msg = document.getElementById('save-msg');
+            msg.style.opacity = '1'; setTimeout(() => { msg.style.opacity = '0'; }, 2000);
+        };
 
-        d3.json(geojsonUrl).then(function(br) {
-            projection.fitSize([width, height], br);
+        function renderDiario() {
+            // Mood
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                btn.classList.remove('opacity-100', 'grayscale-0', 'scale-110');
+                btn.classList.add('opacity-30', 'grayscale');
+            });
+            if (state.diary.mood > 0) {
+                const el = document.getElementById(`mood-${state.diary.mood}`);
+                if (el) { el.classList.remove('opacity-30', 'grayscale'); el.classList.add('opacity-100', 'grayscale-0', 'scale-110'); }
+            }
 
-            svg.selectAll("path")
-                .data(br.features)
-                .enter().append("path")
-                .attr("d", path)
-                .attr("class", "state-path");
+            // Sensacoes Fixo
+            const container = document.getElementById('sensations-container');
+            container.innerHTML = '';
+            sensList.forEach(s => {
+                const isSel = state.diary.sensations.includes(s.id);
+                container.innerHTML += `<button onclick="toggleSens('${s.id}')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider tap-effect transition-all border ${isSel ? 'bg-cozy-sage text-white border-cozy-sage' : 'bg-white text-gray-500 border-gray-200'}">${s.label}</button>`;
+            });
 
-            const pins = svg.selectAll(".pin")
-                .data(cities)
-                .enter()
-                .append("g")
-                .attr("class", "pin")
-                .attr("transform", d => {
-                    const coords = projection(d.coords);
-                    return `translate(${coords[0]}, ${coords[1]})`;
-                });
+            // Eventos Customizados
+            const cContainer = document.getElementById('custom-events-container');
+            cContainer.innerHTML = '';
+            state.diary.customEvents.forEach((ev, i) => {
+                cContainer.innerHTML += `<div class="px-3 py-1.5 rounded-lg bg-cozy-accent text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-2"><span>${ev}</span> <button onclick="removeCustomEvent(${i})" class="opacity-70 hover:opacity-100"><i class="fa-solid fa-xmark"></i></button></div>`;
+            });
 
-            // Ícone de pin amigável (coral)
-            pins.append("path")
-                .attr("d", "M0,0 C2.5,-7.5 7,-12 7,-17 C7,-21 4,-24 0,-24 C-4,-24 -7,-21 -7,-17 C-7,-12 -2.5,-7.5 0,0 Z")
-                .attr("fill", "#ef476f")
-                .attr("stroke", "#ffffff")
-                .attr("stroke-width", 1.5)
-                .attr("transform", "scale(1.2)")
-                .style("filter", "drop-shadow(0px 3px 2px rgba(0,0,0,0.3))");
-                
-            pins.append("circle")
-                .attr("cx", 0)
-                .attr("cy", -20)
-                .attr("r", 2.5)
-                .attr("fill", "#ffffff");
+            // Notas
+            const notesEl = document.getElementById('diary-notes');
+            if (notesEl && document.activeElement !== notesEl) notesEl.value = state.diary.notes || '';
+        }
 
-            // Texto (Nome da cidade oculto, aparece no hover)
-            pins.append("text")
-                .text(d => d.name)
-                .attr("x", 12)
-                .attr("y", -10)
-                .attr("fill", "#ffca28")
-                .attr("font-family", "Poppins, sans-serif")
-                .attr("font-size", "14px")
-                .attr("font-weight", "600")
-                .attr("opacity", 0)
-                .style("pointer-events", "none")
-                .style("text-shadow", "0px 2px 4px rgba(0,0,0,0.8)")
-                .attr("class", "transition-opacity duration-300")
-                .on("mouseover", function() { d3.select(this).attr("opacity", 1); })
-                .on("mouseout", function() { d3.select(this).attr("opacity", 0); });
-                
-            // Ativa o texto no hover do path também
-            pins.selectAll("path")
-                .on("mouseover", function(event, d) {
-                    d3.select(this.parentNode).select("text").attr("opacity", 1);
-                    d3.select(this).attr("fill", "#ffca28").attr("transform", "scale(1.4) translateY(-2px)").transition().duration(200);
-                })
-                .on("mouseout", function(event, d) {
-                    d3.select(this.parentNode).select("text").attr("opacity", 0);
-                    d3.select(this).attr("fill", "#ef476f").attr("transform", "scale(1.2)").transition().duration(200);
-                });
-                
-        }).catch(error => {
-            console.error("Erro ao carregar o mapa:", error);
-            document.getElementById('map-container').innerHTML = "<p class='text-brand-coral font-bold text-center'>Ocorreu um erro ao carregar o mapa.<br>Verifique sua conexão de rede.</p>";
-        });
+        // ==========================================
+        // GRÁFICO (Chart.js)
+        // ==========================================
+        function renderChart() {
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            
+            // Lógica fictícia baseada no dia atual para ilustrar
+            let medsTotal = state.meds.length;
+            let medsTaken = Object.values(state.dailyMeds).filter(v=>v).length;
+            let medScore = medsTotal > 0 ? (medsTaken/medsTotal)*2 : 0; // max 2 pontos
+            let waterScore = (state.diary.water/8)*2; // max 2 pontos
+            let mealScore = (Object.values(state.diary.meals).filter(v=>v).length / 3) * 1; // max 1 ponto
+            let habitScore = medScore + waterScore + mealScore; // Max 5 (Para bater com o eixo do Humor que é 1-5)
+
+            // Mock 6 dias + Hoje
+            const moodData = [3, 2, 4, 5, 4, 3, state.diary.mood || null];
+            const habitData = [2, 1, 4, 5, 3.5, 2, habitScore]; 
+
+            new Chart(ctx, {
+                type: 'bar', // Base chart
+                data: {
+                    labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Hoje'],
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Humor',
+                            data: moodData,
+                            borderColor: '#3a3a3a',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#3a3a3a',
+                            pointRadius: 4,
+                            tension: 0.3,
+                            yAxisID: 'y'
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Índice de Hábitos',
+                            data: habitData,
+                            backgroundColor: 'rgba(139, 156, 138, 0.4)', // Sage com alpha
+                            borderRadius: 4,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: {font: {size: 10}} } },
+                    scales: {
+                        y: { min: 0, max: 5, ticks: { stepSize: 1, font: {size: 10} }, grid: {color: '#f0f0f0'} },
+                        x: { grid: {display: false}, ticks: { font: {size: 10} } }
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // INICIALIZAÇÃO
+        // ==========================================
+        window.onload = () => {
+            const options = { weekday: 'short', day: 'numeric', month: 'short' };
+            document.getElementById('header-date').textContent = new Date().toLocaleDateString('pt-BR', options);
+            
+            loadData();
+            renderTasks();
+            renderMeds();
+            renderSaude();
+            renderDiario();
+        };
+
     </script>
 </body>
 </html>
